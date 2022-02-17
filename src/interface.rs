@@ -1,3 +1,8 @@
+//! This module handles all things user interfact and graphical
+//! using our [crate::gfx] module to provide GPU support and [winit] 
+//! to provide a window from the OS 
+//! 
+
 use winit::{
     event::{WindowEvent, Event},
     event_loop::{EventLoop, ControlFlow}, 
@@ -7,10 +12,10 @@ use winit::{
         WindowId,
     },
 };
-
 use super::gfx::Instance;
 
 /// Set up the window and return an [EventLoop] and [Window] Object
+/// 
 pub fn init_window() -> (EventLoop<()>, Window) {
     // Creates an event listener that we can pass into our window
     let event_loop = EventLoop::new();
@@ -25,6 +30,7 @@ pub fn init_window() -> (EventLoop<()>, Window) {
 }
 
 /// We handle [Event::WindowEvent] here
+/// 
 fn handle_window_event(
     _window_id: &WindowId, 
     event: &WindowEvent, 
@@ -43,38 +49,14 @@ fn handle_window_event(
 }
 
 /// Handles [Event::RedrawRequested]
+/// 
 fn handle_redraw_request(gfx: &Instance){
     println!("Redraw");
-    let frame = gfx.surface
-        .get_current_texture()
-        .expect("Failed to acquire next swap chain texture");
-    let view = frame
-        .texture
-        .create_view(&wgpu::TextureViewDescriptor::default());
-    let mut encoder =
-        gfx.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-    {
-        let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: None,
-            color_attachments: &[wgpu::RenderPassColorAttachment {
-                view: &view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
-                    store: true,
-                },
-            }],
-            depth_stencil_attachment: None,
-        });
-        rpass.set_pipeline(&gfx.render_pipeline);
-        rpass.draw(0..3, 0..1);
-    }
-
-    gfx.queue.submit(Some(encoder.finish()));
-    frame.present();
+    gfx.draw("triangle");
 }
 
-/// Entry point main event handler
+/// Entry point main event handler, main logic is here, it is called by 
+/// [crate::main]
 pub fn handle_events(
     event: &Event<()>, 
     ctrl_flow: &mut ControlFlow, 

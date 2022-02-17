@@ -7,9 +7,9 @@ fn main() {
     let (event_loop, window) = interface::init_window();
 
     // Block until we setup GPU
-    let mut gfx = pollster::block_on(
-        gfx::Instance::new(&window)
-    ).expect("Could not init GPU");
+    let mut gfx 
+        = pollster::block_on(gfx::Instance::new(&window))
+            .expect("Could not init GPU/Onboard GPU");
 
     // Listens for events in the windows and we handle our responses to those
     // events
