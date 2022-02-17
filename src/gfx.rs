@@ -151,9 +151,13 @@ impl Instance{
                 label: Some(&vertex_buffer_label),
                 contents: bytemuck::cast_slice(
                     &[
-                        Test {position: [-1.0 ,-1.0,   0.] },
-                        Test {position: [0.0  ,1.0,    0.] },
-                        Test {position: [0.0  ,-1.0,   0.] }
+                        Test { position: [-1.0  ,-1.0,  0.0] }, //A
+                        Test { position: [ 1.0  ,-0.5,  0.0] }, //B
+                        Test { position: [ 1.0  ,-1.0,  0.0] }, //C
+                        
+                        Test { position: [-1.0  ,-1.0,  0.0] }, //A
+                        Test { position: [ 1.0  ,-0.5,  0.0] }, //B
+                        Test { position: [-1.0  ,-0.5,  0.0] }, //D
                     ]
                 ),
                 usage: wgpu::BufferUsages::VERTEX,
@@ -209,7 +213,7 @@ impl Instance{
                 resolve_target: None,
                 ops: wgpu::Operations {
                     // BackgroundColour
-                    load: wgpu::LoadOp::Clear(wgpu::Color::RED), 
+                    load: wgpu::LoadOp::Clear(wgpu::Color::BLUE), 
                     store: true,
                 },
             }],
@@ -221,7 +225,9 @@ impl Instance{
             0, 
             test_vertex_buffer.slice(..),
         );
-        rpass.draw(0..3, 0..1);
+
+        // Have to call this last
+        rpass.draw(0..6, 0..1);
 
         println!("{rpass:?}");
 
