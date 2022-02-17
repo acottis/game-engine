@@ -74,9 +74,6 @@ impl Instance{
         // Initize surface for presentation
         surface.configure(&device, &surface_config);
         
-        
-        println!("{surface:?}, \n{device:?}, \n{queue:?}");
-        
         Ok(Self {
             surface,
             surface_config,
@@ -87,6 +84,9 @@ impl Instance{
 
     /// This resizing the window when the user adjusts the window size
     pub fn resize(&mut self, height: u32, width: u32){
+        // if area == 0 it will panic
+        if height * width == 0 { return }
+
         self.surface_config.height = height;
         self.surface_config.width = width;
         self.surface.configure(&self.device, &self.surface_config);
@@ -96,49 +96,94 @@ impl Instance{
     pub fn draw(&self, label: &str) {
 
         // Set up labels for debugging
-        let shader_label = format!("'{label}' Shader");
-        let pipeline_layout_label = format!("'{label}' Pipeline Layout");
+        let shader_label          = format!("'{label}' Shader");
+        //let pipeline_layout_label = format!("'{label}' Pipeline Layout");
+        let vertex_buffer_label     = format!("'{label}' Vertex Buffer");
         let render_pipeline_label = format!("'{label}' Render Pipeline");
+        let render_pass_label     = format!("'{label}' Render Pass");
 
         // load shader from file
         let shader_desc = wgpu::ShaderModuleDescriptor {
             label: Some(&shader_label),
             source: wgpu::ShaderSource::Wgsl(
-                std::borrow::Cow::Borrowed(include_str!("shader.wgsl"))
+                include_str!("shader.wgsl").into()
             )
         };
         let shader = self.device.create_shader_module(&shader_desc);
 
-        let pipeline_layout_desc = wgpu::PipelineLayoutDescriptor {
-            label:                Some(&pipeline_layout_label),
-            bind_group_layouts:   &[],
-            push_constant_ranges: &[],
-        };
-        let pipeline_layout = self.device.create_pipeline_layout(&pipeline_layout_desc);
+        //// Dont think we need this yet
+        // let pipeline_layout_desc = wgpu::PipelineLayoutDescriptor {
+        //     label:                Some(&pipeline_layout_label),
+        //     bind_group_layouts:   &[],
+        //     push_constant_ranges: &[],
+        // };
+        // let pipeline_layout 
+        //     = self.device.create_pipeline_layout(&pipeline_layout_desc);
 
+        // MY TESTING --------------------------
+
+        #[repr(C)]
+        #[derive(Copy, Clone, bytemuck::Zeroable, bytemuck::Pod)]
+        struct Test{
+            position: [f32; 3],
+        }
+
+        impl Test{
+            fn descriptor<'a>() -> wgpu::VertexBufferLayout<'a> {
+                wgpu::VertexBufferLayout {
+                    array_stride: std::mem::size_of::<Self>() as u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: &[
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            shader_location: 0,
+                            format: wgpu::VertexFormat::Float32x3,
+                        },
+                    ],
+                }
+            }
+        }
+
+        use wgpu::util::{DeviceExt, BufferInitDescriptor};
+        let test_vertex_buffer = DeviceExt::create_buffer_init(
+        &self.device, 
+        &BufferInitDescriptor {
+                label: Some(&vertex_buffer_label),
+                contents: bytemuck::cast_slice(
+                    &[
+                        Test {position: [-1.0 ,-1.0,   0.] },
+                        Test {position: [0.0  ,1.0,    0.] },
+                        Test {position: [0.0  ,-1.0,   0.] }
+                    ]
+                ),
+                usage: wgpu::BufferUsages::VERTEX,
+            }
+        );
+        // MY TESTING --------------------------
         let render_pipeline = self.device.create_render_pipeline(
         &wgpu::RenderPipelineDescriptor {
                 label: Some(&render_pipeline_label),
-                layout: Some(&pipeline_layout),
+                //layout: Some(&pipeline_layout),
+                layout: None,
+                // This is for shape
                 vertex: wgpu::VertexState { 
                     module: &shader, 
                     entry_point: "vs_main", 
-                    buffers: &[], 
+                    //buffers: &[], 
+                    buffers: &[Test::descriptor()], 
                 },
+                // This is for colour
                 fragment: Some(wgpu::FragmentState {
                     module: &shader,
                     entry_point: "fs_main",
                     targets: &[
-                        wgpu::ColorTargetState::from(self.surface_config.format)]
-                    // targets: &[ wgpu::ColorTargetState {
-                    //     format: *swapchain_format,
-                    //     blend: None,
-                    //     write_mask: wgpu::ColorWrites::empty(),
-                    // }],
+                        wgpu::ColorTargetState::from(
+                            self.surface_config.format)
+                    ]
                 }),
                 primitive: wgpu::PrimitiveState::default(),
-                depth_stencil: None,
                 multisample: wgpu::MultisampleState::default(),
+                depth_stencil: None,
                 multiview: None,
             }
         );
@@ -147,33 +192,47 @@ impl Instance{
         let frame = self.surface
             .get_current_texture()
             .expect("Failed to acquire next swap chain texture");
+
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder =
-            self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+
+        let mut encoder = self.device.create_command_encoder(
+            &wgpu::CommandEncoderDescriptor { 
+                label: None 
+            });
     
         let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: None,
+            label: Some(&render_pass_label),
             color_attachments: &[wgpu::RenderPassColorAttachment {
                 view: &view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
+                    // BackgroundColour
+                    load: wgpu::LoadOp::Clear(wgpu::Color::RED), 
                     store: true,
                 },
             }],
             depth_stencil_attachment: None,
         });
         rpass.set_pipeline(&render_pipeline);
+        //rpass.draw(0..6, 0..1);
+        rpass.set_vertex_buffer(
+            0, 
+            test_vertex_buffer.slice(..),
+        );
         rpass.draw(0..3, 0..1);
 
         println!("{rpass:?}");
+
         // We need to drop this as it owns encoder which we need to use in the 
         // nextline
         drop(rpass);
 
+        // Send to the GPU
         self.queue.submit(Some(encoder.finish()));
+
+        // Show the output on the surface
         frame.present();
     }
 }
