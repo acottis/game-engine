@@ -7,11 +7,13 @@ fn main() {
     let (event_loop, window) = interface::init_window();
 
     // Block until we setup GPU
-    futures::executor::block_on(gfx::new(&window)).expect("Could not init GPU");
+    let mut gfx = pollster::block_on(
+        gfx::Instance::new(&window)
+    ).expect("Could not init GPU");
 
     // Listens for events in the windows and we handle our responses to those
     // events
-    event_loop.run(| event, _, ctrl_flow | {
-        interface::handle_events(&event, ctrl_flow);
+    event_loop.run(move | event, _, ctrl_flow | {
+        interface::handle_events(&event, ctrl_flow, &mut gfx);
     })
 }
