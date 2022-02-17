@@ -1,5 +1,5 @@
 struct Vertex {
-    [[location(0)]] position: vec3<f32>;
+    [[location(0)]] position: vec2<f32>;
 };
 
 

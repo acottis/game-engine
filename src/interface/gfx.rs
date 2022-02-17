@@ -106,7 +106,7 @@ impl Instance{
         let shader_desc = wgpu::ShaderModuleDescriptor {
             label: Some(&shader_label),
             source: wgpu::ShaderSource::Wgsl(
-                include_str!("shader.wgsl").into()
+                include_str!("shaders/shader.wgsl").into()
             )
         };
         let shader = self.device.create_shader_module(&shader_desc);
@@ -125,7 +125,7 @@ impl Instance{
         #[repr(C)]
         #[derive(Copy, Clone, bytemuck::Zeroable, bytemuck::Pod)]
         struct Test{
-            position: [f32; 3],
+            position: [f32; 2], // x, y
         }
 
         impl Test{
@@ -151,13 +151,13 @@ impl Instance{
                 label: Some(&vertex_buffer_label),
                 contents: bytemuck::cast_slice(
                     &[
-                        Test { position: [-1.0  ,-1.0,  0.0] }, //A
-                        Test { position: [ 1.0  ,-0.5,  0.0] }, //B
-                        Test { position: [ 1.0  ,-1.0,  0.0] }, //C
+                        Test { position: [-1.0  ,-1.0] }, //A
+                        Test { position: [ 1.0  ,-0.5] }, //B
+                        Test { position: [ 1.0  ,-1.0] }, //C
                         
-                        Test { position: [-1.0  ,-1.0,  0.0] }, //A
-                        Test { position: [ 1.0  ,-0.5,  0.0] }, //B
-                        Test { position: [-1.0  ,-0.5,  0.0] }, //D
+                        Test { position: [-1.0  ,-1.0] }, //A
+                        Test { position: [ 1.0  ,-0.5] }, //B
+                        Test { position: [-1.0  ,-0.5] }, //D
                     ]
                 ),
                 usage: wgpu::BufferUsages::VERTEX,
@@ -229,6 +229,7 @@ impl Instance{
         // Have to call this last
         rpass.draw(0..6, 0..1);
 
+        println!("{:?}", test_vertex_buffer);
         println!("{rpass:?}");
 
         // We need to drop this as it owns encoder which we need to use in the 

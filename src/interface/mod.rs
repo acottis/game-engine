@@ -3,6 +3,8 @@
 //! to provide a window from the OS 
 //! 
 
+pub mod gfx;
+use gfx::Instance;
 use winit::{
     event::{WindowEvent, Event},
     event_loop::{EventLoop, ControlFlow}, 
@@ -12,7 +14,6 @@ use winit::{
         WindowId,
     },
 };
-use super::gfx::Instance;
 
 /// Set up the window and return an [EventLoop] and [Window] Object
 /// 
@@ -27,6 +28,12 @@ pub fn init_window() -> (EventLoop<()>, Window) {
     .build(&event_loop).expect("Cant Create Window");
 
     (event_loop, window)
+}
+
+pub fn init_gfx(window: &Window) -> Instance {
+    // Block until we setup GPU
+    pollster::block_on(gfx::Instance::new(&window))
+        .expect("Could not init GPU/Onboard GPU")
 }
 
 /// We handle [Event::WindowEvent] here
@@ -80,7 +87,7 @@ pub fn handle_events(
         // Emitted when the OS sends an event to a device.
         Event::DeviceEvent {
             device_id: _,
-            event: _,
+            event:     _,
         } => {},
         _ => {},
     }
