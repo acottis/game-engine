@@ -121,9 +121,13 @@ impl Instance{
     }
 
     /// Main entry point for user to create a shape
-    pub fn draw(&self, shape: Shape2D, label: &str) {
+    pub fn draw(&self, entities: &Vec<Shape2D>) {
+
+        let (vertex_buf, vertex_buf_len) 
+            = self.create_buffer(&entities);
 
         // Set up labels for debugging
+        let label = "Draw";
         let shader_label          = format!("'{label}' Shader");
         //let pipeline_layout_label = format!("'{label}' Pipeline Layout");
         let vertex_buf_label     = format!("'{label}' Vertex Buffer");
@@ -148,12 +152,6 @@ impl Instance{
         // let pipeline_layout 
         //     = self.device.create_pipeline_layout(&pipeline_layout_desc);
 
-        // This takes a shape and gives us the buffer that we can send to the
-        // GPU with all the required triangles
-        let (vertex_buf, vertex_buf_len) = self.create_buffer(
-            shape, 
-            &vertex_buf_label
-        );
 
         let render_pipeline = self.device.create_render_pipeline(
         &wgpu::RenderPipelineDescriptor {
@@ -236,50 +234,42 @@ impl Instance{
     /// [crate::entity::Shape] then turn it into a triangle or
     /// Rectangle on the GPU, we match on the shape and then create the
     /// shape from the coordinates
-    fn create_buffer(&self, shape: Shape2D, label: &str) -> (wgpu::Buffer, u32) {
+    fn create_buffer(&self, entities: &Vec<Shape2D>,) -> (wgpu::Buffer, u32) {
 
-        println!("{:?}", shape);
+        // Create an empty vec
+        let mut shape_buf: Vec<Vertex2D> = Vec::new();
 
-        match shape {
-            Shape2D::Triangle(tri) => {
-                // turn the entity into 2D Vertexs
-                let buf = [
-                    Vertex2D { coord: [ tri.a.x , tri.a.y ] }, //A
-                    Vertex2D { coord: [ tri.b.x , tri.b.y ] }, //B
-                    Vertex2D { coord: [ tri.c.x , tri.c.y ] }, //C
-                ];
-                // Create the buffer that will be sent to the GPU
-                (DeviceExt::create_buffer_init(
-                &self.device, 
-                &BufferInitDescriptor {
-                        label: Some(&label),
-                        contents: bytemuck::cast_slice(&buf),
-                        usage: wgpu::BufferUsages::VERTEX,
-                    }
-                ), buf.len() as u32)
-            },
-            Shape2D::Rectangle(rect) => {
-                // turn the entity into 2D Vertexs
-                let buf = [
-                    Vertex2D { coord: [ rect.a.x , rect.a.y ] }, //A
-                    Vertex2D { coord: [ rect.b.x , rect.b.y ] }, //B
-                    Vertex2D { coord: [ rect.c.x , rect.c.y ] }, //C
+        for entity in entities{
+            match entity {
+                Shape2D::Triangle(tri) => {
+                    // turn the entity into 2D Vertexs
+                    shape_buf.push(Vertex2D { coord: [tri.a.x, tri.a.y] }); //A
+                    shape_buf.push(Vertex2D { coord: [tri.b.x, tri.b.y] }); //B
+                    shape_buf.push(Vertex2D { coord: [tri.c.x, tri.c.y] }); //C
+                },
+                Shape2D::Rectangle(rect) => {
+                    // turn the entity into 2D Vertexs
+                    shape_buf.push(Vertex2D {coord: [rect.a.x, rect.a.y]}); //A
+                    shape_buf.push(Vertex2D {coord: [rect.b.x, rect.b.y]}); //B
+                    shape_buf.push(Vertex2D {coord: [rect.c.x, rect.c.y]}); //C
                     
-                    Vertex2D { coord: [ rect.a.x , rect.a.y ] }, //A
-                    Vertex2D { coord: [ rect.b.x , rect.b.y ] }, //B
-                    Vertex2D { coord: [ rect.d.x , rect.d.y ] }, //D
-                ];
-                // Create the buffer that will be sent to the GPU
-                (DeviceExt::create_buffer_init(
-                &self.device, 
-                &BufferInitDescriptor {
-                        label: Some(&label),
-                        contents: bytemuck::cast_slice(&buf),
-                        usage: wgpu::BufferUsages::VERTEX,
-                    }
-                ), buf.len() as u32)
-            },
-            _ => todo!("Shape not implemented")
+                    shape_buf.push(Vertex2D {coord: [rect.a.x, rect.a.y]}); //A
+                    shape_buf.push(Vertex2D {coord: [rect.b.x, rect.b.y]}); //B
+                    shape_buf.push(Vertex2D {coord: [rect.d.x, rect.d.y]}); //D
+       
+                },
+            }
         }
+        // Create the buffer that will be sent to the GPU
+        (
+            DeviceExt::create_buffer_init(
+            &self.device, 
+            &BufferInitDescriptor {
+                    label: Some("Vector Buffer"),
+                    contents: bytemuck::cast_slice(&shape_buf),
+                    usage: wgpu::BufferUsages::VERTEX,
+                }
+            ), shape_buf.len() as u32
+        )
     }
 }

@@ -4,6 +4,8 @@
 //! 
 
 pub mod gfx;
+use std::vec;
+
 use gfx::Instance;
 
 use crate::entity::{Shape2D, Triangle, Point, Rectangle};
@@ -62,13 +64,19 @@ fn handle_window_event(
 /// 
 fn handle_redraw_request(gfx: &Instance){
     println!("Redraw");
+    let mut entities:Vec<Shape2D> = Vec::new();
+
     let triangle = Triangle::new(
-        Point::new(-1.0, -0.5),
+        Point::new(-1.0, -0.4),
         Point::new( 0.0,  1.0),
-        Point::new( 1.0, -0.5),
+        Point::new( 1.0, -0.4),
     );
 
-    gfx.draw(Shape2D::Triangle(triangle) ,"My Triangle");
+    let triangle2 = Triangle::new(
+        Point::new(-1.0, -0.2),
+        Point::new( 0.0,  1.0),
+        Point::new( 1.0, -0.2),
+    );
 
     let rect = Rectangle::new(
         Point::new(-1.0, -1.0),
@@ -76,8 +84,12 @@ fn handle_redraw_request(gfx: &Instance){
         Point::new( 1.0, -1.0),
         Point::new(-1.0, -0.5),
     );
+    
+    entities.push(Shape2D::Triangle(triangle));
+    entities.push(Shape2D::Triangle(triangle2));
+    entities.push(Shape2D::Rectangle(rect));
 
-    gfx.draw(Shape2D::Rectangle(rect) ,"My Triangle");
+    gfx.draw(&entities);
 }
 
 /// Entry point main event handler, main logic is here, it is called by 

@@ -1,10 +1,10 @@
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Shape2D{
     Triangle(Triangle),
     Rectangle(Rectangle)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Rectangle{
     pub a: Point,
     pub b: Point,
@@ -18,7 +18,7 @@ impl Rectangle{
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Triangle{
     pub a: Point,
     pub b: Point,
@@ -31,7 +31,7 @@ impl Triangle{
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Point {
     pub x: f32,
     pub y: f32,
