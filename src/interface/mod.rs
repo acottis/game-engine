@@ -5,6 +5,9 @@
 
 pub mod gfx;
 use gfx::Instance;
+
+use crate::entity::{Shape2D, Triangle, Point, Rectangle};
+
 use winit::{
     event::{WindowEvent, Event},
     event_loop::{EventLoop, ControlFlow}, 
@@ -59,7 +62,22 @@ fn handle_window_event(
 /// 
 fn handle_redraw_request(gfx: &Instance){
     println!("Redraw");
-    gfx.draw("triangle");
+    let triangle = Triangle::new(
+        Point::new(-1.0, -0.5),
+        Point::new( 0.0,  1.0),
+        Point::new( 1.0, -0.5),
+    );
+
+    gfx.draw(Shape2D::Triangle(triangle) ,"My Triangle");
+
+    let rect = Rectangle::new(
+        Point::new(-1.0, -1.0),
+        Point::new( 1.0, -0.5),
+        Point::new( 1.0, -1.0),
+        Point::new(-1.0, -0.5),
+    );
+
+    gfx.draw(Shape2D::Rectangle(rect) ,"My Triangle");
 }
 
 /// Entry point main event handler, main logic is here, it is called by 

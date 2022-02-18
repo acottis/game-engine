@@ -1,6 +1,7 @@
 //! Program entry point, sets up everything then runs a main game loop
 //! 
 mod interface;
+mod entity;
 
 /// This function handles the main game loop with the multiple components
 fn main() {
