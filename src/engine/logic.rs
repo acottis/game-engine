@@ -1,5 +1,7 @@
 use winit::event::{KeyboardInput, ElementState, VirtualKeyCode};
-use super::entity::{Shape2D, Rectangle, Transform2D};
+use super::entity::{Shape2D, Rectangle, Transform2D, Entity};
+use super::physics::{State, JUMP_TIME};
+use std::collections::HashMap;
 
 /// This will store our game state and pass it around
 #[derive(Debug)]
@@ -8,6 +10,8 @@ pub struct Game {
     pub entities: Vec<Shape2D>,
     // This will keep track of the player entities index
     pub players: Vec<usize>,
+    // Keeps track of keys down
+    pub keys_down: HashMap<Option<VirtualKeyCode>, u8>
 }
 
 impl Game {
@@ -53,15 +57,27 @@ impl Game {
         Self {
             entities,
             players,
+            keys_down: HashMap::new(),
         }
     }
-
     /// This is sent keyboard inputs from our event loop
+    /// 
     pub fn keyboard_input(&mut self, input: &KeyboardInput){
-       
-        // We only care when we press
-        if input.state != ElementState::Pressed { return }
-
+        // This prevents a bug where we no longer get key events when we 
+        // Press multiple at once, we add them to a dictionary that we trust
+        // as the truth of user inputs
+        match input.state {
+            ElementState::Pressed => {
+                self.keys_down.insert(input.virtual_keycode, 0u8);
+            }
+            ElementState::Released => { 
+                self.keys_down.remove(&input.virtual_keycode);
+            },
+        }
+    }
+    /// Run logic on the inputs in [keys_down] HasMap
+    /// 
+    pub fn handle_user_inputs(&mut self){
         // This is temporary
         let player = match self.entities[self.players[Self::PLAYER_ONE]] {
             Shape2D::Rectangle(ref mut r) => {
@@ -69,26 +85,40 @@ impl Game {
             }
             _=> todo!()
         };   
-
-        match input.virtual_keycode {
-            // Move right
-            Some(VirtualKeyCode::D) | Some(VirtualKeyCode::Right)  => { 
-                if player.get_x() >= 1.0 { player.set_x(-1.0) }
-                else { player.shift_x(0.02); }  
-            },
-            // Move Left
-            Some(VirtualKeyCode::A) | Some(VirtualKeyCode::Left)  => { 
-                if player.get_x() <= -1.0 { player.set_x(1.0) }
-                else { player.shift_x(-0.02); }  
-            },
-            // Jump
-            Some(VirtualKeyCode::W) | Some(VirtualKeyCode::Space)  => { 
-                player.shift_y(0.08);  
-            },
-            Some(key) => {
-                println!("We dont handle {key:?}");
-            }
-            None => todo!("WTF: {input:?}")
+        for (key, _) in &self.keys_down {
+            match key {
+                // Move right
+                Some(VirtualKeyCode::D) | Some(VirtualKeyCode::Right)  => { 
+                    if player.x() >= 1.0 { player.set_x(-1.0) }
+                    else { player.shift_x(0.02); }  
+                },
+                // Move Left
+                Some(VirtualKeyCode::A) | Some(VirtualKeyCode::Left)  => { 
+                    if player.x() <= -1.0 { player.set_x(1.0) }
+                    else { player.shift_x(-0.02); }  
+                },
+                // Jump
+                Some(VirtualKeyCode::W) | Some(VirtualKeyCode::Space)  => {
+                    match player.state() {
+                        State::None => {
+                            player.set_state(State::Jumping(JUMP_TIME))
+                        }
+                        _=> {}
+                    };
+                },
+                Some(key) => {
+                    println!("We dont handle {key:?}");
+                }
+                None => todo!("WTF: {key:?}")
+            };
         }
-    }  
+    }
+    /// Runs game logic in a tick, also calls phsyics
+    /// 
+    pub fn update(&mut self){
+        // Handle any user inputs
+        self.handle_user_inputs();
+        // Run the phsyics against our game
+        super::physics::update(self);
+    }
 }

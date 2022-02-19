@@ -46,6 +46,7 @@ fn handle_window_event(
     match event {
         // Handle user input
         WindowEvent::KeyboardInput{ device_id: _, input, is_synthetic: _ } => {
+            // Send to our logic to handle
             game.keyboard_input(input);
         },
         // Handle user requesting close
@@ -94,7 +95,7 @@ pub fn handle_events(
         Event::DeviceEvent {
             device_id: _,
             event:     _,
-        } => {},
+        } => { },
         // After we are done the rest we trigger a redraw to update the image
         // on the screen
         Event::MainEventsCleared => {

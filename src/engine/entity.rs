@@ -8,12 +8,13 @@ pub enum Shape2D{
     Triangle(Triangle),
     Rectangle(Rectangle),
 }
-
+/// Here are traits that must be implemented for each object
+/// to move it in 2d space
 pub trait Transform2D {
     /// Return the x value of the bottom left `C`
-    fn get_x(&self) -> f32;
+    fn x(&self) -> f32;
     /// Return the x,y of the bottom left `C`
-    fn get_xy(&self) -> Point;
+    fn xy(&self) -> Point;
     /// Translate just the x coord
     fn shift_x(&mut self, x: f32);
     /// Translate just the y coord
@@ -22,6 +23,15 @@ pub trait Transform2D {
     fn set_x(&mut self, x: f32);
     /// Set the x,y coords to arbitory values
     fn set_xy(&mut self, x: f32, y: f32);
+}
+
+/// Here are traits that are applied to entities such as
+/// managing [super::physics::State]
+pub trait Entity {
+    // Get the state
+    fn state(&self) -> State;
+    // Set the state 
+    fn set_state(&mut self, state: State);
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -36,10 +46,10 @@ pub struct Rectangle{
 
 /// See [Transform2D] for comments 
 impl Transform2D for Rectangle{
-    fn get_x(&self) -> f32 {
+    fn x(&self) -> f32 {
         self.c.x
     }
-    fn get_xy(&self) -> Point {
+    fn xy(&self) -> Point {
         Point { x: self.c.x, y: self.c.y }
     }
     fn set_xy(&mut self, x: f32, y: f32) {
@@ -73,6 +83,17 @@ impl Transform2D for Rectangle{
         self.b.y += y;
         self.c.y += y;
         self.d.y += y;
+    }
+}
+
+impl Entity for Rectangle {
+    // Get the state
+    fn state(&self) -> State {
+        self.state
+    }
+    // Set the state 
+    fn set_state(&mut self, state: State){
+        self.state = state;
     }
 }
 

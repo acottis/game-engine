@@ -25,5 +25,7 @@ fn main() {
             &mut gfx_instance, 
             &mut game
         );
+        // This will update the game logic and call phsyics
+        game.update();
     })
 }
