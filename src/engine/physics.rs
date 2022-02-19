@@ -41,11 +41,7 @@ pub fn update(game: &mut Game){
                             },
                         }
                     }
-                    _=> {}
                 }
-                // if r.state() == (State::Jumping()}) {
-                //     r.shift_y(0.01);
-                // }
             },
             _=> {}
         };

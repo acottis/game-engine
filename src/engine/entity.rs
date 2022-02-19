@@ -1,12 +1,14 @@
 //! Here is our entity system, we describe our "Entities" that are objects
-//! inside our game, we also do the maths on how to move them here
-//! 
+//! inside our game, we also do the maths on how to move them here. We define
+//! how we want our objects to behave here
 use super::physics::State;
+use std::f32::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Shape2D{
     Triangle(Triangle),
     Rectangle(Rectangle),
+    Pentagon(Pentagon),
 }
 /// Here are traits that must be implemented for each object
 /// to move it in 2d space
@@ -96,13 +98,11 @@ impl Entity for Rectangle {
         self.state = state;
     }
 }
-
-impl Rectangle{
-    pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color) -> Self {
-        Self { a, b, c, d, colour, state: State::None }
-    }
-}
-
+// impl Rectangle{
+//     pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color) -> Self {
+//         Self { a, b, c, d, colour, state: State::None }
+//     }
+// }
 /// C is the bottom Left of the screen
 /// |
 /// |
@@ -122,20 +122,76 @@ impl Default for Rectangle{
         }
     }
 }
+// Our respresentation of a Pentagon entity
+#[derive(Debug, Clone, Copy)]
+pub struct Pentagon{
+    pub a: Point,
+    pub b: Point,
+    pub c: Point,
+    pub d: Point,
+    pub e: Point,
+    pub colour: wgpu::Color,
+    state: State,
+}
+/// reference: https://mathworld.wolfram.com/RegularPentagon.html
+/// C is the bottom Left of the screen
+/// |    B
+/// |  /   \
+/// |A/     \D
+/// | \Black/
+/// |  \___/
+/// ---C---E--------------
+/// ^^default^^
+impl Default for Pentagon{
+    fn default() -> Self {
+        let c1 = f32::cos(2.0 * PI / 5.0);
+        let c2 = f32::cos(      PI / 5.0);
+        let s1 = f32::sin(2.0 * PI / 5.0);
+        let s2 = f32::sin(4.0 * PI / 5.0);
 
+        Self { 
+            a: Point::new(-s1,  c1), // A
+            b: Point::new(0.0,  1.0), // B
+            c: Point::new(-s2,  -c2), // C
+            d: Point::new( s1,  c1), // D
+            e: Point::new( s2,  -c2), // E
+            colour: wgpu::Color::BLACK,
+            state: State::None,
+        }
+    }
+}
+// Our respresentation of a triangle entity
 #[derive(Debug, Clone, Copy)]
 pub struct Triangle{
     pub a: Point,
     pub b: Point,
     pub c: Point,
     pub colour: wgpu::Color,
+    state: State,
 }
-
-impl Triangle{
-    pub fn new(a: Point, b: Point, c: Point, colour: wgpu::Color) -> Self {
-        Self { a, b, c, colour }
+/// C is the bottom Left of the screen
+/// |
+/// |   A
+/// | /   \
+/// |/Black\
+/// C-------B-------------
+/// ^^default^^
+impl Default for Triangle{
+    fn default() -> Self {
+        Self { 
+            a: Point::new(-0.95, -0.9), // A
+            b: Point::new(-0.9,  -1.0), // B
+            c: Point::new(-1.0,  -1.0), // C
+            colour: wgpu::Color::BLACK,
+            state: State::None,
+        }
     }
 }
+// impl Triangle{
+//     pub fn new(a: Point, b: Point, c: Point, colour: wgpu::Color) -> Self {
+//         Self { a, b, c, colour, state: State::None }
+//     }
+// }
 
 #[derive(Debug, Clone, Copy)]
 pub struct Point {

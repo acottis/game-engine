@@ -278,6 +278,19 @@ impl Instance{
                     vertex_buf.push(Vertex2D::new(r.c.x, r.c.y, r.colour)); //C
                     vertex_buf.push(Vertex2D::new(r.d.x, r.d.y, r.colour)); //D
                 },
+                &Shape2D::Pentagon(p) => {
+                    vertex_buf.push(Vertex2D::new(p.a.x, p.a.y, p.colour)); //A
+                    vertex_buf.push(Vertex2D::new(p.b.x, p.b.y, p.colour)); //B
+                    vertex_buf.push(Vertex2D::new(p.c.x, p.c.y, p.colour)); //C
+
+                    vertex_buf.push(Vertex2D::new(p.b.x, p.b.y, p.colour)); //B
+                    vertex_buf.push(Vertex2D::new(p.c.x, p.c.y, p.colour)); //C
+                    vertex_buf.push(Vertex2D::new(p.d.x, p.d.y, p.colour)); //D
+
+                    vertex_buf.push(Vertex2D::new(p.c.x, p.c.y, p.colour)); //C
+                    vertex_buf.push(Vertex2D::new(p.d.x, p.d.y, p.colour)); //D
+                    vertex_buf.push(Vertex2D::new(p.e.x, p.e.y, p.colour)); //E
+                }
             }
         }
         vertex_buf
