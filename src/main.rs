@@ -2,6 +2,7 @@
 //! 
 mod interface;
 mod entity;
+mod engine;
 
 /// This function handles the main game loop with the multiple components
 fn main() {
@@ -11,9 +12,17 @@ fn main() {
     // Set up our GPU or onboard graphics
     let mut gfx_instance = interface::init_gfx(&window);
 
+    // Set up our Game engine
+    let mut game = engine::Game::new();
+
     // Listens for events in the windows and we handle our responses to those
     // events
     event_loop.run(move | event, _, ctrl_flow | {
-        interface::handle_events(&event, ctrl_flow, &mut gfx_instance);
+        interface::handle_events(
+            &event, 
+            ctrl_flow, 
+            &mut gfx_instance, 
+            &mut game
+        );
     })
 }

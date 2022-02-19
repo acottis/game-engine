@@ -4,11 +4,10 @@
 //! 
 
 pub mod gfx;
-use std::vec;
 
 use gfx::Instance;
+use crate::engine::Game;
 
-use crate::entity::{Shape2D, Triangle, Point, Rectangle};
 
 use winit::{
     event::{WindowEvent, Event},
@@ -62,37 +61,10 @@ fn handle_window_event(
 
 /// Handles [Event::RedrawRequested]
 /// 
-fn handle_redraw_request(gfx: &Instance){
+fn handle_redraw_request(gfx: &Instance, game: &mut Game){
     println!("Redraw");
-    let mut entities:Vec<Shape2D> = Vec::new();
-
-    let triangle = Triangle::new(
-        Point::new(-1.0, -0.4),
-        Point::new( 0.0,  1.0),
-        Point::new( 1.0, -0.4),
-        wgpu::Color::RED
-    );
-
-    let triangle2 = Triangle::new(
-        Point::new(-1.0, -0.2),
-        Point::new( 0.0,  1.0),
-        Point::new( 1.0, -0.2),
-        wgpu::Color::BLACK
-    );
-
-    let rect = Rectangle::new(
-        Point::new(-1.0, -1.0),
-        Point::new( 1.0, -0.5),
-        Point::new( 1.0, -1.0),
-        Point::new(-1.0, -0.5),
-        wgpu::Color::GREEN,
-    );
-    
-    entities.push(Shape2D::Triangle(triangle));
-    entities.push(Shape2D::Triangle(triangle2));
-    entities.push(Shape2D::Rectangle(rect));
-
-    gfx.draw(&entities);
+    game.update();
+    gfx.draw(&game.entities);
 }
 
 /// Entry point main event handler, main logic is here, it is called by 
@@ -101,6 +73,7 @@ pub fn handle_events(
     event: &Event<()>, 
     ctrl_flow: &mut ControlFlow, 
     gfx: &mut Instance,
+    game: &mut Game,
 ){
     // We send events to the appropriate handlers
     match event {
@@ -115,7 +88,7 @@ pub fn handle_events(
         },
         // Emitted when OS requests screen refresh
         Event::RedrawRequested(_) =>{
-            handle_redraw_request(gfx);
+            handle_redraw_request(gfx, game);
         },
         // Emitted when the OS sends an event to a device.
         Event::DeviceEvent {

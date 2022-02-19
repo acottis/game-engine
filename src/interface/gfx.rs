@@ -274,8 +274,8 @@ impl Instance{
                     vertex_buf.push(Vertex2D::new(r.b.x, r.b.y, r.colour)); //B
                     vertex_buf.push(Vertex2D::new(r.c.x, r.c.y, r.colour)); //C
                     
-                    vertex_buf.push(Vertex2D::new(r.a.x, r.a.y, r.colour)); //A
                     vertex_buf.push(Vertex2D::new(r.b.x, r.b.y, r.colour)); //B
+                    vertex_buf.push(Vertex2D::new(r.c.x, r.c.y, r.colour)); //C
                     vertex_buf.push(Vertex2D::new(r.d.x, r.d.y, r.colour)); //D
                 },
             }
