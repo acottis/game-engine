@@ -1,7 +1,12 @@
+//! Here is our entity system, we describe our "Entities" that are objects
+//! inside our game, we also do the maths on how to move them here
+//! 
+use super::physics::State;
+
 #[derive(Debug, Clone, Copy)]
 pub enum Shape2D{
     Triangle(Triangle),
-    Rectangle(Rectangle)
+    Rectangle(Rectangle),
 }
 
 pub trait Transform2D {
@@ -11,6 +16,8 @@ pub trait Transform2D {
     fn get_xy(&self) -> Point;
     /// Translate just the x coord
     fn shift_x(&mut self, x: f32);
+    /// Translate just the y coord
+    fn shift_y(&mut self, y: f32);
     /// Set the x coord to an arbitory value
     fn set_x(&mut self, x: f32);
     /// Set the x,y coords to arbitory values
@@ -24,12 +31,16 @@ pub struct Rectangle{
     pub c: Point,
     pub d: Point,
     pub colour: wgpu::Color,
+    state: State,
 }
 
 /// See [Transform2D] for comments 
 impl Transform2D for Rectangle{
     fn get_x(&self) -> f32 {
         self.c.x
+    }
+    fn get_xy(&self) -> Point {
+        Point { x: self.c.x, y: self.c.y }
     }
     fn set_xy(&mut self, x: f32, y: f32) {
         let width = self.b.x - self.a.x;
@@ -51,20 +62,23 @@ impl Transform2D for Rectangle{
         self.c.x = x;
         self.d.x = x + width;
     }
-    fn get_xy(&self) -> Point {
-        Point { x: self.c.x, y: self.c.y }
-    }
     fn shift_x(&mut self, x: f32) {
         self.a.x += x;
         self.b.x += x;
         self.c.x += x;
         self.d.x += x;
     }
+    fn shift_y(&mut self, y: f32) {
+        self.a.y += y;
+        self.b.y += y;
+        self.c.y += y;
+        self.d.y += y;
+    }
 }
 
 impl Rectangle{
     pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color) -> Self {
-        Self { a, b, c, d, colour }
+        Self { a, b, c, d, colour, state: State::None }
     }
 }
 
@@ -82,7 +96,9 @@ impl Default for Rectangle{
             b: Point::new(-0.9, -0.9), // B
             c: Point::new(-1.0, -1.0), // C
             d: Point::new(-0.9, -1.0), // D
-            colour: wgpu::Color::BLACK }
+            colour: wgpu::Color::BLACK,
+            state: State::None,
+        }
     }
 }
 

@@ -1,7 +1,6 @@
 //! Program entry point, sets up everything then runs a main game loop
 //! 
 mod interface;
-mod entity;
 mod engine;
 
 /// This function handles the main game loop with the multiple components
@@ -15,6 +14,7 @@ fn main() {
     // Set up our Game engine
     let mut game = engine::Game::new();
 
+    println!("{:?}", game);
     // Listens for events in the windows and we handle our responses to those
     // events
     event_loop.run(move | event, _, ctrl_flow | {

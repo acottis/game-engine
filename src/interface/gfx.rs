@@ -1,7 +1,7 @@
 //! Here we deal with all things Grpahics using [wgpu], we use [pollster] to 
 //! handle the async parts 
 
-use crate::entity::Shape2D;
+use crate::engine::entity::Shape2D;
 use wgpu::util::{DeviceExt, BufferInitDescriptor};
 
 
