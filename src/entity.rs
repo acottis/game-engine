@@ -10,11 +10,12 @@ pub struct Rectangle{
     pub b: Point,
     pub c: Point,
     pub d: Point,
+    pub colour: wgpu::Color,
 }
 
 impl Rectangle{
-    pub fn new(a: Point, b: Point, c: Point, d: Point) -> Self {
-        Self { a, b, c, d }
+    pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color) -> Self {
+        Self { a, b, c, d, colour }
     }
 }
 
@@ -23,11 +24,12 @@ pub struct Triangle{
     pub a: Point,
     pub b: Point,
     pub c: Point,
+    pub colour: wgpu::Color,
 }
 
 impl Triangle{
-    pub fn new(a: Point, b: Point, c: Point) -> Self {
-        Self { a, b, c }
+    pub fn new(a: Point, b: Point, c: Point, colour: wgpu::Color) -> Self {
+        Self { a, b, c, colour }
     }
 }
 

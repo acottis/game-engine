@@ -70,12 +70,14 @@ fn handle_redraw_request(gfx: &Instance){
         Point::new(-1.0, -0.4),
         Point::new( 0.0,  1.0),
         Point::new( 1.0, -0.4),
+        wgpu::Color::RED
     );
 
     let triangle2 = Triangle::new(
         Point::new(-1.0, -0.2),
         Point::new( 0.0,  1.0),
         Point::new( 1.0, -0.2),
+        wgpu::Color::BLACK
     );
 
     let rect = Rectangle::new(
@@ -83,6 +85,7 @@ fn handle_redraw_request(gfx: &Instance){
         Point::new( 1.0, -0.5),
         Point::new( 1.0, -1.0),
         Point::new(-1.0, -0.5),
+        wgpu::Color::GREEN,
     );
     
     entities.push(Shape2D::Triangle(triangle));

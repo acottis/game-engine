@@ -11,9 +11,18 @@ use wgpu::util::{DeviceExt, BufferInitDescriptor};
 #[derive(Copy, Clone, bytemuck::Zeroable, bytemuck::Pod)]
 struct Vertex2D{
     coord: [f32; 2], // x, y
+    colour: [f32; 4], // x, y
 }
 
 impl Vertex2D{
+    /// Create new [Vertex2D]
+    fn new(x: f32, y: f32, colour: wgpu::Color) -> Self{
+        Self{
+            coord: [x, y],
+            colour: [colour.r as f32, colour.g as f32, colour.b as f32, colour.a as f32],
+        }
+    }
+    /// This descriptor is passed to [wgpu::RenderPipelineDescriptor]
     fn descriptor<'a>() -> wgpu::VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<Self>() as u64,
@@ -22,7 +31,12 @@ impl Vertex2D{
                 wgpu::VertexAttribute {
                     offset: 0,
                     shader_location: 0,
-                    format: wgpu::VertexFormat::Float32x3,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32;2]>() as u64,
+                    shader_location: 1,
+                    format: wgpu::VertexFormat::Float32x4,
                 },
             ],
         }
@@ -39,11 +53,11 @@ pub struct Instance {
 }
 
 impl Instance{
-
-    // Init our WGPU api
+    /// Init our WGPU api
     pub async fn new(window: &winit::window::Window) -> Result<Self,()> {
         // Base type of the wgpu module
-        let instance: wgpu::Instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
+        let instance: wgpu::Instance 
+            = wgpu::Instance::new(wgpu::Backends::PRIMARY);
         
         // Surface is on top of the window which we use to draw
         let surface = unsafe {
@@ -123,16 +137,26 @@ impl Instance{
     /// Main entry point for user to create a shape
     pub fn draw(&self, entities: &Vec<Shape2D>) {
 
-        let (vertex_buf, vertex_buf_len) 
-            = self.create_buffer(&entities);
+        // Puts all the entities into the vertex buffer
+        let entity_buffer = self.create_buffer(&entities);
+
+        // Create the buffer that will be sent to the GPU
+        let vertex_buf = DeviceExt::create_buffer_init(
+            &self.device, 
+            &BufferInitDescriptor {
+                    label: Some("Vector Buffer"),
+                    contents: bytemuck::cast_slice(&entity_buffer),
+                    usage: wgpu::BufferUsages::VERTEX,
+                }
+            );
 
         // Set up labels for debugging
-        let label = "Draw";
-        let shader_label          = format!("'{label}' Shader");
-        //let pipeline_layout_label = format!("'{label}' Pipeline Layout");
-        let vertex_buf_label     = format!("'{label}' Vertex Buffer");
-        let render_pipeline_label = format!("'{label}' Render Pipeline");
-        let render_pass_label     = format!("'{label}' Render Pass");
+        const LABEL: &'static str = "Draw";
+        let shader_label = format!("'{LABEL}' Shader");
+        //let pipeline_layout_label = format!("'{LABEL}' Pipeline Layout");
+        let vertex_buf_label = format!("'{LABEL}' Vertex Buffer");
+        let render_pipeline_label = format!("'{LABEL}' Render Pipeline");
+        let render_pass_label = format!("'{LABEL}' Render Pass");
 
         // load shader from file
         let shader_desc = wgpu::ShaderModuleDescriptor {
@@ -151,7 +175,6 @@ impl Instance{
         // };
         // let pipeline_layout 
         //     = self.device.create_pipeline_layout(&pipeline_layout_desc);
-
 
         let render_pipeline = self.device.create_render_pipeline(
         &wgpu::RenderPipelineDescriptor {
@@ -200,7 +223,7 @@ impl Instance{
                 resolve_target: None,
                 ops: wgpu::Operations {
                     // BackgroundColour
-                    load: wgpu::LoadOp::Clear(wgpu::Color::BLUE), 
+                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE), 
                     store: true,
                 },
             }],
@@ -214,10 +237,8 @@ impl Instance{
             vertex_buf.slice(..),
         );
 
-        // Have to call this last
-        rpass.draw(0..vertex_buf_len, 0..1);
-
-        println!("{rpass:?}");
+        // Have to call this last after setting everything for the render_pass
+        rpass.draw(0..(entity_buffer.len() as u32), 0..1);
 
         // We need to drop this as it owns encoder which we need to use in the 
         // nextline
@@ -234,42 +255,31 @@ impl Instance{
     /// [crate::entity::Shape] then turn it into a triangle or
     /// Rectangle on the GPU, we match on the shape and then create the
     /// shape from the coordinates
-    fn create_buffer(&self, entities: &Vec<Shape2D>,) -> (wgpu::Buffer, u32) {
-
+    fn create_buffer(&self, entities: &Vec<Shape2D>) -> Vec<Vertex2D> {
         // Create an empty vec
-        let mut shape_buf: Vec<Vertex2D> = Vec::new();
-
+        let mut vertex_buf: Vec<Vertex2D> = Vec::new();
+        // Go through all entities we are given by engine and add them to 
+        // buffer
         for entity in entities{
             match entity {
-                Shape2D::Triangle(tri) => {
+                Shape2D::Triangle(t) => {
                     // turn the entity into 2D Vertexs
-                    shape_buf.push(Vertex2D { coord: [tri.a.x, tri.a.y] }); //A
-                    shape_buf.push(Vertex2D { coord: [tri.b.x, tri.b.y] }); //B
-                    shape_buf.push(Vertex2D { coord: [tri.c.x, tri.c.y] }); //C
+                    vertex_buf.push(Vertex2D::new(t.a.x, t.a.y, t.colour)); //A
+                    vertex_buf.push(Vertex2D::new(t.b.x, t.b.y, t.colour)); //B
+                    vertex_buf.push(Vertex2D::new(t.c.x, t.c.y, t.colour)); //C
                 },
-                Shape2D::Rectangle(rect) => {
-                    // turn the entity into 2D Vertexs
-                    shape_buf.push(Vertex2D {coord: [rect.a.x, rect.a.y]}); //A
-                    shape_buf.push(Vertex2D {coord: [rect.b.x, rect.b.y]}); //B
-                    shape_buf.push(Vertex2D {coord: [rect.c.x, rect.c.y]}); //C
+                Shape2D::Rectangle(r) => {
+                    //turn the entity into 2D Vertexs
+                    vertex_buf.push(Vertex2D::new(r.a.x, r.a.y, r.colour)); //A
+                    vertex_buf.push(Vertex2D::new(r.b.x, r.b.y, r.colour)); //B
+                    vertex_buf.push(Vertex2D::new(r.c.x, r.c.y, r.colour)); //C
                     
-                    shape_buf.push(Vertex2D {coord: [rect.a.x, rect.a.y]}); //A
-                    shape_buf.push(Vertex2D {coord: [rect.b.x, rect.b.y]}); //B
-                    shape_buf.push(Vertex2D {coord: [rect.d.x, rect.d.y]}); //D
-       
+                    vertex_buf.push(Vertex2D::new(r.a.x, r.a.y, r.colour)); //A
+                    vertex_buf.push(Vertex2D::new(r.b.x, r.b.y, r.colour)); //B
+                    vertex_buf.push(Vertex2D::new(r.d.x, r.d.y, r.colour)); //D
                 },
             }
         }
-        // Create the buffer that will be sent to the GPU
-        (
-            DeviceExt::create_buffer_init(
-            &self.device, 
-            &BufferInitDescriptor {
-                    label: Some("Vector Buffer"),
-                    contents: bytemuck::cast_slice(&shape_buf),
-                    usage: wgpu::BufferUsages::VERTEX,
-                }
-            ), shape_buf.len() as u32
-        )
+        vertex_buf
     }
 }
