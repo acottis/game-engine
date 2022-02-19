@@ -32,7 +32,17 @@ impl Transform2D for Rectangle{
         self.c.x
     }
     fn set_xy(&mut self, x: f32, y: f32) {
-        todo!();
+        let width = self.b.x - self.a.x;
+        self.a.x = x;
+        self.b.x = x + width;
+        self.c.x = x;
+        self.d.x = x + width;
+
+        let height = self.a.y - self.c.y;
+        self.a.y = y + height;
+        self.b.y = y + height;
+        self.c.y = y;
+        self.d.y = y;
     }
     fn set_x(&mut self, x: f32) {
         let width = self.b.x - self.a.x;

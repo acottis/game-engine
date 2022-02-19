@@ -1,7 +1,7 @@
 //! Here we deal with all things Grpahics using [wgpu], we use [pollster] to 
 //! handle the async parts 
 
-use crate::entity::{Shape2D, Triangle, Point};
+use crate::entity::Shape2D;
 use wgpu::util::{DeviceExt, BufferInitDescriptor};
 
 
@@ -135,28 +135,28 @@ impl Instance{
     }
 
     /// Main entry point for user to create a shape
-    pub fn draw(&self, entities: &Vec<Shape2D>) {
-
-        // Puts all the entities into the vertex buffer
-        let entity_buffer = self.create_buffer(&entities);
-
-        // Create the buffer that will be sent to the GPU
-        let vertex_buf = DeviceExt::create_buffer_init(
-            &self.device, 
-            &BufferInitDescriptor {
-                    label: Some("Vector Buffer"),
-                    contents: bytemuck::cast_slice(&entity_buffer),
-                    usage: wgpu::BufferUsages::VERTEX,
-                }
-            );
+    pub fn draw(&self, entities: &[Shape2D]) {
 
         // Set up labels for debugging
-        const LABEL: &'static str = "Draw";
+        const LABEL: &str = "Draw";
         let shader_label = format!("'{LABEL}' Shader");
         //let pipeline_layout_label = format!("'{LABEL}' Pipeline Layout");
         let vertex_buf_label = format!("'{LABEL}' Vertex Buffer");
         let render_pipeline_label = format!("'{LABEL}' Render Pipeline");
         let render_pass_label = format!("'{LABEL}' Render Pass");
+
+        // Puts all the entities into the vertex buffer
+        let entity_buffer = self.create_buffer(entities);
+
+        // Create the buffer that will be sent to the GPU
+        let vertex_buf = DeviceExt::create_buffer_init(
+        &self.device, 
+        &BufferInitDescriptor {
+                label: Some(&vertex_buf_label),
+                contents: bytemuck::cast_slice(&entity_buffer),
+                usage: wgpu::BufferUsages::VERTEX,
+            }
+        );
 
         // load shader from file
         let shader_desc = wgpu::ShaderModuleDescriptor {
@@ -255,7 +255,7 @@ impl Instance{
     /// [crate::entity::Shape] then turn it into a triangle or
     /// Rectangle on the GPU, we match on the shape and then create the
     /// shape from the coordinates
-    fn create_buffer(&self, entities: &Vec<Shape2D>) -> Vec<Vertex2D> {
+    fn create_buffer(&self, entities: &[Shape2D]) -> Vec<Vertex2D> {
         // Create an empty vec
         let mut vertex_buf: Vec<Vertex2D> = Vec::new();
         // Go through all entities we are given by engine and add them to 

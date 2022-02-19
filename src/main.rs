@@ -19,8 +19,9 @@ fn main() {
     // events
     event_loop.run(move | event, _, ctrl_flow | {
         interface::handle_events(
+            &window,
             &event, 
-            ctrl_flow, 
+            ctrl_flow,
             &mut gfx_instance, 
             &mut game
         );
