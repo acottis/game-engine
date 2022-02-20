@@ -2,7 +2,7 @@ use winit::event::{KeyboardInput, ElementState, VirtualKeyCode};
 use super::entity::{
     Shape2D, Rectangle, Transform2D, Entity, Triangle, Pentagon
 };
-use super::physics::{State, JUMP_TIME};
+use super::physics::State;
 use std::collections::HashMap;
 
 /// This will store our game state and pass it around
@@ -14,6 +14,8 @@ pub struct Game {
     pub players: Vec<usize>,
     // Keeps track of keys down
     pub keys_down: HashMap<Option<VirtualKeyCode>, u8>,
+    // Last time to calculate the delta
+    last_time: std::time::Instant,
     // Delta time to fix physics
     pub dt: f32, 
 }
@@ -33,14 +35,25 @@ impl Game {
         // Push the player into the entities array
         entities.push(Shape2D::Rectangle(player));
 
-        entities.push(Shape2D::Pentagon(Pentagon::default()));
+        //entities.push(Shape2D::Pentagon(Pentagon::default()));
 
         Self {
             entities,
             players,
             keys_down: HashMap::new(),
+            last_time: std::time::Instant::now(),
             dt: 0.0
         }
+    }
+    /// Update the delta to fix time
+    pub fn update_dt(&mut self){
+        let current_time = std::time::Instant::now();
+        self.dt = (current_time - self.last_time).as_secs_f32();
+        if self.dt < crate::globals::TICK_RATE { 
+            self.dt = crate::globals::TICK_RATE;
+        }
+        //println!("{}", game.dt);
+        self.last_time = current_time;
     }
     /// This is sent keyboard inputs from our event loop
     /// 
@@ -72,18 +85,18 @@ impl Game {
                 // Move right
                 Some(VirtualKeyCode::D) | Some(VirtualKeyCode::Right)  => { 
                     if player.x() >= 1.0 { player.set_x(-1.0) }
-                    else { player.shift_x(0.5 * self.dt); }  
+                    else { player.shift_x(0.8 * self.dt); }  
                 },
                 // Move Left
                 Some(VirtualKeyCode::A) | Some(VirtualKeyCode::Left)  => { 
                     if player.x() <= -1.0 { player.set_x(1.0) }
-                    else { player.shift_x(-0.5 * self.dt); }  
+                    else { player.shift_x(-0.8 * self.dt); }  
                 },
                 // Jump
                 Some(VirtualKeyCode::W) | Some(VirtualKeyCode::Space)  => {
                     match player.state() {
                         State::None => {
-                            player.set_state(State::Jumping(JUMP_TIME))
+                            player.set_state(State::Jumping(crate::globals::JUMP_TIME))
                         }
                         _=> {}
                     };

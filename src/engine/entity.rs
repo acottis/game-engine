@@ -103,6 +103,7 @@ impl Entity for Rectangle {
 //         Self { a, b, c, d, colour, state: State::None }
 //     }
 // }
+
 /// C is the bottom Left of the screen
 /// |
 /// |

@@ -80,8 +80,11 @@ pub fn handle_events(
         } => { 
             handle_window_event(window_id, event, ctrl_flow, gfx, game);
         },
-        // Emitted when OS requests screen refresh
+        // Emitted when OS requests screen refresh, this is essentially our
+        // main game loop
         Event::RedrawRequested(_) =>{
+            // Calculate our delta time to assist our phsyics
+            game.update_dt();
             // This will update the game logic and call phsyics
             game.update();
             // This will send entities to GPU to draw
