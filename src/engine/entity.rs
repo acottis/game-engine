@@ -124,6 +124,7 @@ impl Default for Rectangle{
     }
 }
 // Our respresentation of a Pentagon entity
+#[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct Pentagon{
     pub a: Point,

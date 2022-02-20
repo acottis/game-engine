@@ -2,6 +2,7 @@
 //! 
 use super::Game;
 use super::entity::{Shape2D, Entity, Transform2D};
+use crate::globals::{JUMP_SPEED, JUMP_TICKS};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum State{
@@ -19,18 +20,18 @@ pub fn update(game: &mut Game){
                     State::Jumping(i) => {
                         match i {
                             1.. => {  
-                                r.shift_y(1.3 * game.dt); 
+                                r.shift_y(JUMP_SPEED * game.dt); 
                                 r.set_state(State::Jumping(i-1)); 
                             },
                             0 => { 
-                                r.set_state(State::Falling(crate::globals::FALL_TIME));  
+                                r.set_state(State::Falling(JUMP_TICKS));  
                             },
                         }
                     }
                     State::Falling(i) => {
                         match i {
                             1.. => {  
-                                r.shift_y(-1.3 * game.dt); 
+                                r.shift_y(-JUMP_SPEED * game.dt); 
                                 r.set_state(State::Falling(i-1)); 
                             },
                             0 => { 

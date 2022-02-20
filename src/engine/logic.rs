@@ -3,6 +3,7 @@ use super::entity::{
     Shape2D, Rectangle, Transform2D, Entity, Triangle, Pentagon
 };
 use super::physics::State;
+use crate::globals::{ PLAYER_SPEED, JUMP_TICKS };
 use std::collections::HashMap;
 
 /// This will store our game state and pass it around
@@ -85,18 +86,21 @@ impl Game {
                 // Move right
                 Some(VirtualKeyCode::D) | Some(VirtualKeyCode::Right)  => { 
                     if player.x() >= 1.0 { player.set_x(-1.0) }
-                    else { player.shift_x(0.8 * self.dt); }  
+                    else { 
+                        player.shift_x(PLAYER_SPEED * self.dt); 
+                    }  
                 },
                 // Move Left
                 Some(VirtualKeyCode::A) | Some(VirtualKeyCode::Left)  => { 
                     if player.x() <= -1.0 { player.set_x(1.0) }
-                    else { player.shift_x(-0.8 * self.dt); }  
+                    else { 
+                        player.shift_x(-PLAYER_SPEED * self.dt); }  
                 },
                 // Jump
                 Some(VirtualKeyCode::W) | Some(VirtualKeyCode::Space)  => {
                     match player.state() {
                         State::None => {
-                            player.set_state(State::Jumping(crate::globals::JUMP_TIME))
+                            player.set_state(State::Jumping(JUMP_TICKS))
                         }
                         _=> {}
                     };

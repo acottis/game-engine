@@ -203,9 +203,14 @@ impl Instance{
             }
         );
         
-        let frame = self.surface
-            .get_current_texture()
-            .expect("Failed to acquire next swap chain texture");
+        let frame = match self.surface.get_current_texture() {
+            Ok(frame) => { frame },
+            // No idea why this panics so lets just handle it and not draw
+            Err(wgpu::SurfaceError::Outdated) => { return }, 
+            Err(e) => {
+                panic!("{e:?}")
+            },
+        };
 
         let view = frame
             .texture
