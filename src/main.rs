@@ -22,6 +22,7 @@ fn main() {
     // events
     let mut last_time = std::time::Instant::now();
     event_loop.run(move | event, _, ctrl_flow | {
+
         let current_time = std::time::Instant::now();
         game.dt = (current_time - last_time).as_secs_f32();
         if game.dt < TICK_RATE { 
@@ -37,7 +38,5 @@ fn main() {
             &mut gfx_instance, 
             &mut game
         );
-        // This will update the game logic and call phsyics
-        game.update();
     })
 }

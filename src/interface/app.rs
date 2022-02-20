@@ -82,6 +82,9 @@ pub fn handle_events(
         },
         // Emitted when OS requests screen refresh
         Event::RedrawRequested(_) =>{
+            // This will update the game logic and call phsyics
+            game.update();
+            // This will send entities to GPU to draw
             gfx.draw(&game.entities);
         },
         // // Emitted when the OS sends an event to a device.
