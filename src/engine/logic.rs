@@ -13,7 +13,9 @@ pub struct Game {
     // This will keep track of the player entities index
     pub players: Vec<usize>,
     // Keeps track of keys down
-    pub keys_down: HashMap<Option<VirtualKeyCode>, u8>
+    pub keys_down: HashMap<Option<VirtualKeyCode>, u8>,
+    // Delta time to fix physics
+    pub dt: f32, 
 }
 
 impl Game {
@@ -37,6 +39,7 @@ impl Game {
             entities,
             players,
             keys_down: HashMap::new(),
+            dt: 0.0
         }
     }
     /// This is sent keyboard inputs from our event loop
@@ -69,12 +72,12 @@ impl Game {
                 // Move right
                 Some(VirtualKeyCode::D) | Some(VirtualKeyCode::Right)  => { 
                     if player.x() >= 1.0 { player.set_x(-1.0) }
-                    else { player.shift_x(0.02); }  
+                    else { player.shift_x(0.5 * self.dt); }  
                 },
                 // Move Left
                 Some(VirtualKeyCode::A) | Some(VirtualKeyCode::Left)  => { 
                     if player.x() <= -1.0 { player.set_x(1.0) }
-                    else { player.shift_x(-0.02); }  
+                    else { player.shift_x(-0.5 * self.dt); }  
                 },
                 // Jump
                 Some(VirtualKeyCode::W) | Some(VirtualKeyCode::Space)  => {

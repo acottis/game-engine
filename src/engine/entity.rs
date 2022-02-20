@@ -144,14 +144,16 @@ pub struct Pentagon{
 /// ^^default^^
 impl Default for Pentagon{
     fn default() -> Self {
-        let c1 = f32::cos(2.0 * PI / 5.0);
-        let c2 = f32::cos(      PI / 5.0);
-        let s1 = f32::sin(2.0 * PI / 5.0);
-        let s2 = f32::sin(4.0 * PI / 5.0);
+        const B_X: f32 = 0.0 / 10.0;
+        const B_Y: f32 = 1.0 / 10.0;
+        let c1 = f32::cos(2.0 * PI / 5.0) / 10.0;
+        let c2 = f32::cos(      PI / 5.0) / 10.0;
+        let s1 = f32::sin(2.0 * PI / 5.0) / 10.0;
+        let s2 = f32::sin(4.0 * PI / 5.0) / 10.0;
 
         Self { 
             a: Point::new(-s1,  c1), // A
-            b: Point::new(0.0,  1.0), // B
+            b: Point::new(   B_X,  B_Y), // B
             c: Point::new(-s2,  -c2), // C
             d: Point::new( s1,  c1), // D
             e: Point::new( s2,  -c2), // E

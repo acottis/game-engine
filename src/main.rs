@@ -1,7 +1,10 @@
 //! Program entry point, sets up everything then runs a main game loop
 //! 
+
 mod interface;
 mod engine;
+
+const TICK_RATE: f32 = 1.0 / 144.0;
 
 /// This function handles the main game loop with the multiple components
 fn main() {
@@ -17,7 +20,16 @@ fn main() {
     println!("{:?}", game);
     // Listens for events in the windows and we handle our responses to those
     // events
+    let mut last_time = std::time::Instant::now();
     event_loop.run(move | event, _, ctrl_flow | {
+        let current_time = std::time::Instant::now();
+        game.dt = (current_time - last_time).as_secs_f32();
+        if game.dt < TICK_RATE { 
+            game.dt = TICK_RATE;
+        }
+        //println!("{}", game.dt);
+        last_time = current_time;
+
         interface::handle_events(
             &window,
             &event, 

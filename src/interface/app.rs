@@ -60,13 +60,6 @@ fn handle_window_event(
     }
 }
 
-/// Handles [Event::RedrawRequested]
-/// 
-fn handle_redraw_request(gfx: &Instance, game: &mut Game){
-    // Sends the current game state to the GPU to draw
-    gfx.draw(&game.entities);
-}
-
 /// Entry point main event handler, main logic is here, it is called by 
 /// [crate::main]
 pub fn handle_events(
@@ -79,19 +72,19 @@ pub fn handle_events(
     // We send events to the appropriate handlers
     match event {
         // Emitted when new events arrive from the OS to be processed.
-        Event::NewEvents(_start_cause) => {},
+        // Event::NewEvents(_start_cause) => {},
         // Emitted when the OS sends an event to a winit window
         Event::WindowEvent{
             window_id,
             event 
         } => { 
-            handle_window_event(window_id, event, ctrl_flow, gfx, game) 
+            handle_window_event(window_id, event, ctrl_flow, gfx, game);
         },
         // Emitted when OS requests screen refresh
         Event::RedrawRequested(_) =>{
-            handle_redraw_request(gfx, game);
+            gfx.draw(&game.entities);
         },
-        // Emitted when the OS sends an event to a device.
+        // // Emitted when the OS sends an event to a device.
         Event::DeviceEvent {
             device_id: _,
             event:     _,
