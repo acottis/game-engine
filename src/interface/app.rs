@@ -27,13 +27,13 @@ pub fn init_window() -> (EventLoop<()>, Window) {
 
     (event_loop, window)
 }
-
+/// We set up the GPU state before starting game
+/// 
 pub fn init_gfx(window: &Window) -> Instance {
     // Block until we setup GPU
     pollster::block_on(Instance::new(window))
         .expect("Could not init GPU/Onboard GPU")
 }
-
 /// We handle [Event::WindowEvent] here
 /// 
 fn handle_window_event(

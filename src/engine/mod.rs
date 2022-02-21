@@ -2,7 +2,8 @@
 //!
 
 pub mod entity;
-pub mod logic;
+mod game;
 mod physics;
+mod controls;
 
-pub use logic::Game;
+pub use game::Game;
