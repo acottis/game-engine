@@ -21,10 +21,20 @@ pub trait Transform2D {
     fn shift_x(&mut self, x: f32);
     /// Translate just the y coord
     fn shift_y(&mut self, y: f32);
+    /// Shift the x,y coords to arbitory values
+    fn shift_xy(&mut self, x: f32, y: f32) {
+        self.shift_x(x);
+        self.shift_y(y);
+    }
     /// Set the x coord to an arbitory value
     fn set_x(&mut self, x: f32);
+    /// Set the y coord to an arbitory value
+    fn set_y(&mut self, y: f32);
     /// Set the x,y coords to arbitory values
-    fn set_xy(&mut self, x: f32, y: f32);
+    fn set_xy(&mut self, x: f32, y: f32) {
+        self.set_x(x);
+        self.set_y(y);
+    }
 }
 
 /// Here are traits that are applied to entities such as
@@ -54,25 +64,19 @@ impl Transform2D for Rectangle{
     fn xy(&self) -> Point {
         Point { x: self.c.x, y: self.c.y }
     }
-    fn set_xy(&mut self, x: f32, y: f32) {
-        let width = self.b.x - self.a.x;
-        self.a.x = x;
-        self.b.x = x + width;
-        self.c.x = x;
-        self.d.x = x + width;
-
-        let height = self.a.y - self.c.y;
-        self.a.y = y + height;
-        self.b.y = y + height;
-        self.c.y = y;
-        self.d.y = y;
-    }
     fn set_x(&mut self, x: f32) {
         let width = self.b.x - self.a.x;
         self.a.x = x;
         self.b.x = x + width;
         self.c.x = x;
         self.d.x = x + width;
+    }
+    fn set_y(&mut self, y: f32) {
+        let height = self.a.y - self.c.y;
+        self.a.y = y + height;
+        self.b.y = y + height;
+        self.c.y = y;
+        self.d.y = y;
     }
     fn shift_x(&mut self, x: f32) {
         self.a.x += x;
@@ -189,6 +193,49 @@ impl Default for Triangle{
             colour: wgpu::Color::BLACK,
             state: State::None,
         }
+    }
+}
+impl Entity for Triangle {
+    // Get the state
+    fn state(&self) -> State {
+        self.state
+    }
+    // Set the state 
+    fn set_state(&mut self, state: State){
+        self.state = state;
+    }
+}
+/// See [Transform2D] for comments 
+impl Transform2D for Triangle{
+    fn x(&self) -> f32 {
+        self.c.x
+    }
+    fn xy(&self) -> Point {
+        Point { x: self.c.x, y: self.c.y }
+    }
+    fn set_x(&mut self, x: f32) {
+        let ca_side_y = self.a.x - self.c.x;
+        let cb_side_x = self.b.x - self.c.x;
+        self.a.x = x + ca_side_y;
+        self.b.x = x + cb_side_x;
+        self.c.x = x;
+    }
+    fn set_y(&mut self, y: f32) {
+        let ca_side_y = self.a.y - self.c.y;
+        let cb_side_y = self.b.y - self.c.y;
+        self.a.y = y + ca_side_y;
+        self.b.y = y + cb_side_y;
+        self.c.y = y;
+    }
+    fn shift_x(&mut self, x: f32) {
+        self.a.x += x;
+        self.b.x += x;
+        self.c.x += x;
+    }
+    fn shift_y(&mut self, y: f32) {
+        self.a.y += y;
+        self.b.y += y;
+        self.c.y += y;
     }
 }
 // impl Triangle{

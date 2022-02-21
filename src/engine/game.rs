@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use winit::event::{KeyboardInput, ElementState, VirtualKeyCode};
-use super::entity::{Shape2D, Rectangle};
+use super::entity::{Shape2D, Triangle};
 use crate::globals::TICK_RATE;
 
 /// This will store our game state and pass it around
@@ -25,11 +25,12 @@ impl Game {
         let mut players: Vec<usize> = Vec::new();
         let mut entities: Vec<Shape2D> = Vec::new();
         // Our player is a rectangle
-        let player = Rectangle::default();
+        let player = Triangle::default();
         // We push the index of our player into our players vec
         players.push(entities.len());
         // Push the player into the entities array
-        entities.push(Shape2D::Rectangle(player));
+        //entities.push(Shape2D::Rectangle(player));
+        entities.push(Shape2D::Triangle(player));
 
         //entities.push(Shape2D::Pentagon(Pentagon::default()));
 

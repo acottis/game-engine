@@ -10,36 +10,47 @@ pub enum State{
     Jumping(u32), // Jumping with T time
     Falling(u32),
 }
+impl State{
+    fn handle<T>(&self, shape: &mut T, dt: f32) 
+        where T: Transform2D + Entity 
+    {
+        match self {
+            State::None => {}
+            State::Jumping(i) => {
+                match i {
+                    1.. => {  
+                        shape.shift_y(JUMP_SPEED * dt); 
+                        shape.set_state(State::Jumping(i-1)); 
+                    },
+                    0 => { 
+                        shape.set_state(State::Falling(JUMP_TICKS));  
+                    },
+                }
+            }
+            State::Falling(i) => {
+                match i {
+                    1.. => {  
+                        shape.shift_y(-JUMP_SPEED * dt); 
+                        shape.set_state(State::Falling(i-1)); 
+                    },
+                    0 => { 
+                        shape.set_state(State::None);  
+                    },
+                }
+            }
+        }
+    }
+}
 
+/// Main physics loop
 pub fn update(game: &mut Game){
     for entity in &mut game.entities{
         match entity {
-            Shape2D::Rectangle(ref mut r) => {
-                match r.state() {
-                    State::None => {}
-                    State::Jumping(i) => {
-                        match i {
-                            1.. => {  
-                                r.shift_y(JUMP_SPEED * game.dt); 
-                                r.set_state(State::Jumping(i-1)); 
-                            },
-                            0 => { 
-                                r.set_state(State::Falling(JUMP_TICKS));  
-                            },
-                        }
-                    }
-                    State::Falling(i) => {
-                        match i {
-                            1.. => {  
-                                r.shift_y(-JUMP_SPEED * game.dt); 
-                                r.set_state(State::Falling(i-1)); 
-                            },
-                            0 => { 
-                                r.set_state(State::None);  
-                            },
-                        }
-                    }
-                }
+            Shape2D::Rectangle(ref mut shape) => {
+                shape.state().handle(shape, game.dt);
+            },
+            Shape2D::Triangle(ref mut shape) => {
+                shape.state().handle(shape, game.dt);
             },
             _=> {}
         };
