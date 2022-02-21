@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 use winit::event::{KeyboardInput, ElementState, VirtualKeyCode};
-use super::entity::{
-    Shape2D, Rectangle, Transform2D, Entity, Triangle, Pentagon
-};
+use super::entity::{Shape2D, Rectangle};
 use crate::globals::TICK_RATE;
 
 /// This will store our game state and pass it around

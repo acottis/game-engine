@@ -2,9 +2,7 @@ use winit::event::VirtualKeyCode;
 use crate::engine::physics::State;
 use crate::globals::{JUMP_TICKS, PLAYER_SPEED};
 use super::game::Game;
-use super::entity::{
-    Shape2D, Rectangle, Transform2D, Entity, Triangle, Pentagon
-};
+use super::entity::{Shape2D, Transform2D, Entity};
 /// Run logic on the inputs in [keys_down] HasMap
 /// 
 pub fn handler(game: &mut Game){
