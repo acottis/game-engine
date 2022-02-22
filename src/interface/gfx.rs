@@ -50,6 +50,7 @@ pub struct Instance {
     surface_config:  wgpu::SurfaceConfiguration,
     device:          wgpu::Device,
     queue:           wgpu::Queue,
+    shaders:         Vec<std::borrow::Cow<'static, str>>
 }
 
 impl Instance{
@@ -116,11 +117,16 @@ impl Instance{
         // Initize surface for presentation
         surface.configure(&device, &surface_config);
         
+        // Initialize my shaders
+        let mut shaders = Vec::new();
+        shaders.push(include_str!("shaders/shader.wgsl").into());
+
         Ok(Self {
             surface,
             surface_config,
             device,
             queue,
+            shaders,
         })
     }
 
@@ -148,6 +154,7 @@ impl Instance{
         // Puts all the entities into the vertex buffer
         let entity_buffer = self.create_buffer(entities);
 
+        ////////////// PROBLEM IS HERE MEMORY LEAK
         // Create the buffer that will be sent to the GPU
         let vertex_buf = DeviceExt::create_buffer_init(
         &self.device, 
@@ -157,13 +164,14 @@ impl Instance{
                 usage: wgpu::BufferUsages::VERTEX,
             }
         );
+        //////////////// MEMORY LEAK
 
         // load shader from file
         let shader_desc = wgpu::ShaderModuleDescriptor {
             label: Some(&shader_label),
             source: wgpu::ShaderSource::Wgsl(
-                include_str!("shaders/shader.wgsl").into()
-            )
+                //std::borrow::Cow::Borrowed(&self.shaders[0]))
+                include_str!("shaders/shader.wgsl").into())
         };
         let shader = self.device.create_shader_module(&shader_desc);
 
@@ -212,9 +220,9 @@ impl Instance{
             },
         };
 
-        let view = frame
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
+        let view = frame.texture.create_view(
+            &wgpu::TextureViewDescriptor::default()
+        );
 
         let mut encoder = self.device.create_command_encoder(
             &wgpu::CommandEncoderDescriptor { 
@@ -251,7 +259,6 @@ impl Instance{
 
         // Send to the GPU
         self.queue.submit(Some(encoder.finish()));
-
         // Show the output on the surface
         frame.present();
     }

@@ -9,6 +9,8 @@ pub enum State{
     None,
     Jumping(u32), // Jumping with T time
     Falling(u32),
+    // For terrain that has no phsyics applied
+    Static,
 }
 impl State{
     fn handle<T>(&self, shape: &mut T, dt: f32) 
@@ -38,8 +40,13 @@ impl State{
                     },
                 }
             }
+            State::Static => {}
         }
     }
+}
+/// Main collision logic
+fn collision(){
+
 }
 
 /// Main physics loop

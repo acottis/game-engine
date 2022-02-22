@@ -102,12 +102,11 @@ impl Entity for Rectangle {
         self.state = state;
     }
 }
-// impl Rectangle{
-//     pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color) -> Self {
-//         Self { a, b, c, d, colour, state: State::None }
-//     }
-// }
-
+impl Rectangle{
+    pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color) -> Self {
+        Self { a, b, c, d, colour, state: State::None }
+    }
+}
 /// C is the bottom Left of the screen
 /// |
 /// |

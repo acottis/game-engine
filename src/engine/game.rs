@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use winit::event::{KeyboardInput, ElementState, VirtualKeyCode};
-use super::entity::{Shape2D, Triangle};
+use super::entity::{Shape2D, Triangle, Rectangle, Point};
 use crate::globals::TICK_RATE;
 
 /// This will store our game state and pass it around
@@ -29,10 +29,20 @@ impl Game {
         // We push the index of our player into our players vec
         players.push(entities.len());
         // Push the player into the entities array
-        //entities.push(Shape2D::Rectangle(player));
         entities.push(Shape2D::Triangle(player));
-
+        //entities.push(Shape2D::Rectangle(player));
         //entities.push(Shape2D::Pentagon(Pentagon::default()));
+
+        let floor = Shape2D::Rectangle(
+            Rectangle::new(
+            Point::new(-1.1, -0.95),
+            Point::new(1.1, -0.95),
+            Point::new(-1.1, -1.05),
+            Point::new(1.1, -1.05),
+            wgpu::Color::GREEN
+        ));
+
+        entities.push(floor);
 
         Self {
             entities,
@@ -70,7 +80,8 @@ impl Game {
             },
         }
     }
-    /// Runs game logic in a tick, also calls physics
+    /// Runs game logic in a tick, also calls physics and handles
+    /// user input logic
     /// 
     pub fn update(&mut self){
         // Handle any user inputs

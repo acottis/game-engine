@@ -35,7 +35,7 @@ fn match_key<T>(
             },
             Some(key) => {
                 println!("We dont handle {key:?}");
-            }
+            },
             None => todo!("WTF: {key:?}")
         };
     }
@@ -44,6 +44,10 @@ fn match_key<T>(
 /// 
 pub fn handler(game: &mut Game){
     // We handle our player no matter what shape
+
+    // If we have no players, dont do any input handling
+    if game.players.len() == 0 { return }
+
     match game.entities[game.players[0]] {
         Shape2D::Rectangle(ref mut shape) => {
             match_key(shape, &game.keys_down, game.dt)
