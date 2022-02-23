@@ -50,7 +50,9 @@ pub struct Instance {
     surface_config:  wgpu::SurfaceConfiguration,
     device:          wgpu::Device,
     queue:           wgpu::Queue,
-    shaders:         Vec<std::borrow::Cow<'static, str>>
+    buffer:          wgpu::Buffer,
+    shader:          wgpu::ShaderModule,
+    render_pipeline: wgpu::RenderPipeline,
 }
 
 impl Instance{
@@ -116,17 +118,70 @@ impl Instance{
         
         // Initize surface for presentation
         surface.configure(&device, &surface_config);
+
+        let buffer = device.create_buffer(
+            &wgpu::BufferDescriptor {
+                label: None,
+                size: 1024,
+                usage: wgpu::BufferUsages::VERTEX,
+                mapped_at_creation: false,
+            }
+        );
         
         // Initialize my shaders
-        let mut shaders = Vec::new();
-        shaders.push(include_str!("shaders/shader.wgsl").into());
+        let shader_desc = wgpu::ShaderModuleDescriptor {
+            label: None,
+            source: wgpu::ShaderSource::Wgsl(
+                // load shader from file
+                include_str!("shaders/shader.wgsl").into())
+        };
+        let shader = device.create_shader_module(&shader_desc);
+
+        //// Dont think we need this yet
+        // let pipeline_layout_desc = wgpu::PipelineLayoutDescriptor {
+        //     label:                Some(&pipeline_layout_label),
+        //     bind_group_layouts:   &[],
+        //     push_constant_ranges: &[],
+        // };
+        // let pipeline_layout 
+        //     = self.device.create_pipeline_layout(&pipeline_layout_desc);
+
+        // Init render pipeline
+        let render_pipeline = device.create_render_pipeline(
+            &wgpu::RenderPipelineDescriptor {
+                    label: None,
+                    //layout: Some(&pipeline_layout),
+                    layout: None,
+                    // This is for shape
+                    vertex: wgpu::VertexState { 
+                        module: &shader, 
+                        entry_point: "vs_main", 
+                        buffers: &[Vertex2D::descriptor()], 
+                    },
+                    // This is for colour
+                    fragment: Some(wgpu::FragmentState {
+                        module: &shader,
+                        entry_point: "fs_main",
+                        targets: &[
+                            wgpu::ColorTargetState::from(
+                                surface_config.format)
+                        ]
+                    }),
+                    primitive: wgpu::PrimitiveState::default(),
+                    multisample: wgpu::MultisampleState::default(),
+                    depth_stencil: None,
+                    multiview: None,
+                }
+            );
 
         Ok(Self {
             surface,
             surface_config,
             device,
             queue,
-            shaders,
+            shader,
+            buffer,
+            render_pipeline,
         })
     }
 
@@ -143,71 +198,16 @@ impl Instance{
     /// Main entry point for user to create a shape
     pub fn draw(&self, entities: &[Shape2D]) {
 
-        // Set up labels for debugging
-        const LABEL: &str = "Draw";
-        let shader_label = format!("'{LABEL}' Shader");
-        //let pipeline_layout_label = format!("'{LABEL}' Pipeline Layout");
-        let vertex_buf_label = format!("'{LABEL}' Vertex Buffer");
-        let render_pipeline_label = format!("'{LABEL}' Render Pipeline");
-        let render_pass_label = format!("'{LABEL}' Render Pass");
-
         // Puts all the entities into the vertex buffer
         let entity_buffer = self.create_buffer(entities);
 
-        ////////////// PROBLEM IS HERE MEMORY LEAK
         // Create the buffer that will be sent to the GPU
         let vertex_buf = DeviceExt::create_buffer_init(
         &self.device, 
         &BufferInitDescriptor {
-                label: Some(&vertex_buf_label),
+                label: None,
                 contents: bytemuck::cast_slice(&entity_buffer),
                 usage: wgpu::BufferUsages::VERTEX,
-            }
-        );
-        //////////////// MEMORY LEAK
-
-        // load shader from file
-        let shader_desc = wgpu::ShaderModuleDescriptor {
-            label: Some(&shader_label),
-            source: wgpu::ShaderSource::Wgsl(
-                //std::borrow::Cow::Borrowed(&self.shaders[0]))
-                include_str!("shaders/shader.wgsl").into())
-        };
-        let shader = self.device.create_shader_module(&shader_desc);
-
-        //// Dont think we need this yet
-        // let pipeline_layout_desc = wgpu::PipelineLayoutDescriptor {
-        //     label:                Some(&pipeline_layout_label),
-        //     bind_group_layouts:   &[],
-        //     push_constant_ranges: &[],
-        // };
-        // let pipeline_layout 
-        //     = self.device.create_pipeline_layout(&pipeline_layout_desc);
-
-        let render_pipeline = self.device.create_render_pipeline(
-        &wgpu::RenderPipelineDescriptor {
-                label: Some(&render_pipeline_label),
-                //layout: Some(&pipeline_layout),
-                layout: None,
-                // This is for shape
-                vertex: wgpu::VertexState { 
-                    module: &shader, 
-                    entry_point: "vs_main", 
-                    buffers: &[Vertex2D::descriptor()], 
-                },
-                // This is for colour
-                fragment: Some(wgpu::FragmentState {
-                    module: &shader,
-                    entry_point: "fs_main",
-                    targets: &[
-                        wgpu::ColorTargetState::from(
-                            self.surface_config.format)
-                    ]
-                }),
-                primitive: wgpu::PrimitiveState::default(),
-                multisample: wgpu::MultisampleState::default(),
-                depth_stencil: None,
-                multiview: None,
             }
         );
         
@@ -225,12 +225,12 @@ impl Instance{
         );
 
         let mut encoder = self.device.create_command_encoder(
-            &wgpu::CommandEncoderDescriptor { 
-                label: None 
-            });
-    
+        &wgpu::CommandEncoderDescriptor { 
+            label: None 
+        });
+
         let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some(&render_pass_label),
+            label: None,
             color_attachments: &[wgpu::RenderPassColorAttachment {
                 view: &view,
                 resolve_target: None,
@@ -242,7 +242,7 @@ impl Instance{
             }],
             depth_stencil_attachment: None,
         });
-        rpass.set_pipeline(&render_pipeline);
+        rpass.set_pipeline(&self.render_pipeline);
 
         // Put the vertex buffer into slot 0 of the GPU
         rpass.set_vertex_buffer(
