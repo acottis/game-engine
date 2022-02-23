@@ -24,13 +24,12 @@ impl Game {
         // Init our arrays
         let mut players: Vec<usize> = Vec::new();
         let mut entities: Vec<Shape2D> = Vec::new();
-        // Our player is a rectangle
-        let player = Triangle::default();
+
         // We push the index of our player into our players vec
         players.push(entities.len());
-        // Push the player into the entities array
-        entities.push(Shape2D::Triangle(player));
-        //entities.push(Shape2D::Rectangle(player));
+        // PLAYER
+        entities.push(Shape2D::Triangle(Triangle::default()));
+        //entities.push(Shape2D::Rectangle(Rectangle::default()));
         //entities.push(Shape2D::Pentagon(Pentagon::default()));
 
         let floor = Shape2D::Rectangle(
@@ -85,7 +84,7 @@ impl Game {
     /// 
     pub fn update(&mut self){
         // Handle any user inputs
-        super::controls::handler(self);
+        super::controls::handle(self);
         // Run the phsyics against our game
         super::physics::update(self);
     }

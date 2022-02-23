@@ -2,8 +2,6 @@
 //! handle the async parts 
 
 use crate::engine::entity::Shape2D;
-use wgpu::util::{DeviceExt, BufferInitDescriptor};
-
 
 /// This struct repesents a position in 2d space, we use these in batches of 3
 /// to build [crate::entity::Shape2D]
@@ -51,7 +49,6 @@ pub struct Instance {
     device:          wgpu::Device,
     queue:           wgpu::Queue,
     buffer:          wgpu::Buffer,
-    shader:          wgpu::ShaderModule,
     render_pipeline: wgpu::RenderPipeline,
 }
 
@@ -123,7 +120,7 @@ impl Instance{
             &wgpu::BufferDescriptor {
                 label: None,
                 size: 1024,
-                usage: wgpu::BufferUsages::VERTEX,
+                usage: wgpu::BufferUsages::all(),
                 mapped_at_creation: false,
             }
         );
@@ -179,7 +176,6 @@ impl Instance{
             surface_config,
             device,
             queue,
-            shader,
             buffer,
             render_pipeline,
         })
@@ -200,21 +196,21 @@ impl Instance{
 
         // Puts all the entities into the vertex buffer
         let entity_buffer = self.create_buffer(entities);
-
-        // Create the buffer that will be sent to the GPU
-        let vertex_buf = DeviceExt::create_buffer_init(
-        &self.device, 
-        &BufferInitDescriptor {
-                label: None,
-                contents: bytemuck::cast_slice(&entity_buffer),
-                usage: wgpu::BufferUsages::VERTEX,
-            }
+        
+        // This puts our entities into the GPU command queue to be sent
+        // to the GPU when ready
+        self.queue.write_buffer(
+            &self.buffer,
+            0,
+            bytemuck::cast_slice(&entity_buffer)
         );
         
+        // Get the next frame from the surface
         let frame = match self.surface.get_current_texture() {
             Ok(frame) => { frame },
             // No idea why this panics so lets just handle it and not draw
             Err(wgpu::SurfaceError::Outdated) => { return }, 
+            // I want to panic if anything else happens, not expected
             Err(e) => {
                 panic!("{e:?}")
             },
@@ -224,11 +220,13 @@ impl Instance{
             &wgpu::TextureViewDescriptor::default()
         );
 
+        // Init the Command Encoder
         let mut encoder = self.device.create_command_encoder(
         &wgpu::CommandEncoderDescriptor { 
             label: None 
         });
 
+        // Init the Render Pass
         let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &[wgpu::RenderPassColorAttachment {
@@ -242,12 +240,13 @@ impl Instance{
             }],
             depth_stencil_attachment: None,
         });
+        // use our pipeline we init in our constructer
         rpass.set_pipeline(&self.render_pipeline);
 
         // Put the vertex buffer into slot 0 of the GPU
         rpass.set_vertex_buffer(
             0, 
-            vertex_buf.slice(..),
+            self.buffer.slice(..),
         );
 
         // Have to call this last after setting everything for the render_pass
@@ -274,14 +273,13 @@ impl Instance{
         // buffer
         for entity in entities{
             match entity {
+                // Turn the entity into 2D Vertexs
                 Shape2D::Triangle(t) => {
-                    // turn the entity into 2D Vertexs
                     vertex_buf.push(Vertex2D::new(t.a.x, t.a.y, t.colour)); //A
                     vertex_buf.push(Vertex2D::new(t.b.x, t.b.y, t.colour)); //B
                     vertex_buf.push(Vertex2D::new(t.c.x, t.c.y, t.colour)); //C
                 },
                 Shape2D::Rectangle(r) => {
-                    //turn the entity into 2D Vertexs
                     vertex_buf.push(Vertex2D::new(r.a.x, r.a.y, r.colour)); //A
                     vertex_buf.push(Vertex2D::new(r.b.x, r.b.y, r.colour)); //B
                     vertex_buf.push(Vertex2D::new(r.c.x, r.c.y, r.colour)); //C

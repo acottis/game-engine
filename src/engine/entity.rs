@@ -54,57 +54,12 @@ pub struct Rectangle{
     pub d: Point,
     pub colour: wgpu::Color,
     state: State,
+    collision: bool,
 }
 
-/// See [Transform2D] for comments 
-impl Transform2D for Rectangle{
-    fn x(&self) -> f32 {
-        self.c.x
-    }
-    fn xy(&self) -> Point {
-        Point { x: self.c.x, y: self.c.y }
-    }
-    fn set_x(&mut self, x: f32) {
-        let width = self.b.x - self.a.x;
-        self.a.x = x;
-        self.b.x = x + width;
-        self.c.x = x;
-        self.d.x = x + width;
-    }
-    fn set_y(&mut self, y: f32) {
-        let height = self.a.y - self.c.y;
-        self.a.y = y + height;
-        self.b.y = y + height;
-        self.c.y = y;
-        self.d.y = y;
-    }
-    fn shift_x(&mut self, x: f32) {
-        self.a.x += x;
-        self.b.x += x;
-        self.c.x += x;
-        self.d.x += x;
-    }
-    fn shift_y(&mut self, y: f32) {
-        self.a.y += y;
-        self.b.y += y;
-        self.c.y += y;
-        self.d.y += y;
-    }
-}
-
-impl Entity for Rectangle {
-    // Get the state
-    fn state(&self) -> State {
-        self.state
-    }
-    // Set the state 
-    fn set_state(&mut self, state: State){
-        self.state = state;
-    }
-}
 impl Rectangle{
     pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color) -> Self {
-        Self { a, b, c, d, colour, state: State::None }
+        Self { a, b, c, d, colour, state: State::None, collision: true }
     }
 }
 /// C is the bottom Left of the screen
@@ -117,12 +72,13 @@ impl Rectangle{
 impl Default for Rectangle{
     fn default() -> Self {
         Self { 
-            a: Point::new(-1.0, -0.9), // A
-            b: Point::new(-0.9, -0.9), // B
-            c: Point::new(-1.0, -1.0), // C
-            d: Point::new(-0.9, -1.0), // D
-            colour: wgpu::Color::BLACK,
-            state: State::None,
+            a:          Point::new(-1.0, -0.9), // A
+            b:          Point::new(-0.9, -0.9), // B
+            c:          Point::new(-1.0, -1.0), // C
+            d:          Point::new(-0.9, -1.0), // D
+            colour:     wgpu::Color::BLACK,
+            state:      State::None,
+            collision:  true,
         }
     }
 }
@@ -149,6 +105,7 @@ pub struct Pentagon{
 /// ^^default^^
 impl Default for Pentagon{
     fn default() -> Self {
+        // Probably should precompute this, or calculate before game starts
         const B_X: f32 = 0.0 / 10.0;
         const B_Y: f32 = 1.0 / 10.0;
         let c1 = f32::cos(2.0 * PI / 5.0) / 10.0;
@@ -156,7 +113,7 @@ impl Default for Pentagon{
         let s1 = f32::sin(2.0 * PI / 5.0) / 10.0;
         let s2 = f32::sin(4.0 * PI / 5.0) / 10.0;
 
-        Self { 
+        Self {
             a: Point::new(-s1,  c1), // A
             b: Point::new(   B_X,  B_Y), // B
             c: Point::new(-s2,  -c2), // C
@@ -194,49 +151,8 @@ impl Default for Triangle{
         }
     }
 }
-impl Entity for Triangle {
-    // Get the state
-    fn state(&self) -> State {
-        self.state
-    }
-    // Set the state 
-    fn set_state(&mut self, state: State){
-        self.state = state;
-    }
-}
-/// See [Transform2D] for comments 
-impl Transform2D for Triangle{
-    fn x(&self) -> f32 {
-        self.c.x
-    }
-    fn xy(&self) -> Point {
-        Point { x: self.c.x, y: self.c.y }
-    }
-    fn set_x(&mut self, x: f32) {
-        let ca_side_y = self.a.x - self.c.x;
-        let cb_side_x = self.b.x - self.c.x;
-        self.a.x = x + ca_side_y;
-        self.b.x = x + cb_side_x;
-        self.c.x = x;
-    }
-    fn set_y(&mut self, y: f32) {
-        let ca_side_y = self.a.y - self.c.y;
-        let cb_side_y = self.b.y - self.c.y;
-        self.a.y = y + ca_side_y;
-        self.b.y = y + cb_side_y;
-        self.c.y = y;
-    }
-    fn shift_x(&mut self, x: f32) {
-        self.a.x += x;
-        self.b.x += x;
-        self.c.x += x;
-    }
-    fn shift_y(&mut self, y: f32) {
-        self.a.y += y;
-        self.b.y += y;
-        self.c.y += y;
-    }
-}
+
+
 // impl Triangle{
 //     pub fn new(a: Point, b: Point, c: Point, colour: wgpu::Color) -> Self {
 //         Self { a, b, c, colour, state: State::None }
@@ -252,5 +168,125 @@ pub struct Point {
 impl Point{
     pub fn new(x: f32, y: f32) -> Self {
         Self { x, y }
+    }
+}
+
+/// See [Transform2D] for comments 
+impl Transform2D for Shape2D {
+    fn x(&self) -> f32 {
+        match &self {
+            Shape2D::Triangle(t) => { t.c.x },
+            Shape2D::Rectangle(r) => { r.c.x },
+            Shape2D::Pentagon(_) => { unimplemented!() }
+        }
+    }
+    fn xy(&self) -> Point {
+        match &self {
+            Shape2D::Triangle(t) => { Point { x: t.c.x, y: t.c.y } },
+            Shape2D::Rectangle(r) => { Point { x: r.c.x, y: r.c.y } },
+            Shape2D::Pentagon(_) => { unimplemented!() }
+        }
+    }
+    fn set_x(&mut self, x: f32) {
+        match self {
+            Shape2D::Triangle(ref mut t) => {
+                let ca_side_y = t.a.x - t.c.x;
+                let cb_side_x = t.b.x - t.c.x;
+                t.a.x = x + ca_side_y;
+                t.b.x = x + cb_side_x;
+                t.c.x = x;
+            },
+            Shape2D::Rectangle(ref mut r) => { 
+                let width = r.b.x - r.a.x;
+                r.a.x = x;
+                r.b.x = x + width;
+                r.c.x = x;
+                r.d.x = x + width;
+            },
+            Shape2D::Pentagon(_) => { unimplemented!() }
+        }
+    }
+    fn set_y(&mut self, y: f32) {
+        match self {
+            Shape2D::Triangle(ref mut t) => {
+                let ca_side_y = t.a.y - t.c.y;
+                let cb_side_y = t.b.y - t.c.y;
+                t.a.y = y + ca_side_y;
+                t.b.y = y + cb_side_y;
+                t.c.y = y;
+            },
+            Shape2D::Rectangle(ref mut r) => {
+                let height = r.a.y - r.c.y;
+                r.a.y = y + height;
+                r.b.y = y + height;
+                r.c.y = y;
+                r.d.y = y;
+            },
+            Shape2D::Pentagon(_) => { unimplemented!() }
+        }
+    }
+    fn shift_x(&mut self, x: f32) {
+        match self {
+            Shape2D::Triangle(ref mut t) => {
+                t.a.x += x;
+                t.b.x += x;
+                t.c.x += x;
+            },
+            Shape2D::Rectangle(ref mut r) => {
+                r.a.x += x;
+                r.b.x += x;
+                r.c.x += x;
+                r.d.x += x;
+            },
+            Shape2D::Pentagon(_) => { unimplemented!() }
+        }
+    }
+    fn shift_y(&mut self, y: f32) {
+        match self {
+            Shape2D::Triangle(ref mut t) => {
+                t.a.y += y;
+                t.b.y += y;
+                t.c.y += y;
+            },
+            Shape2D::Rectangle(ref mut r) => {
+                r.a.y += y;
+                r.b.y += y;
+                r.c.y += y;
+                r.d.y += y;
+            },
+            Shape2D::Pentagon(_) => { unimplemented!() }
+            _ => {}
+        }
+    }
+}
+
+impl Entity for Shape2D {
+    // Get the state
+    fn state(&self) -> State {
+        match self {
+            Shape2D::Triangle(t) => {
+                t.state
+            },
+            Shape2D::Rectangle(r) => {
+                r.state
+            },
+            Shape2D::Pentagon(p) => {
+                p.state
+            },
+        }
+    }
+    // Set the state 
+    fn set_state(&mut self, state: State){
+        match self {
+            Shape2D::Triangle(ref mut t) => {
+                t.state = state
+            },
+            Shape2D::Rectangle(ref mut r) => {
+                r.state = state
+            },
+            Shape2D::Pentagon(ref mut p) => {
+                p.state = state
+            },
+        }
     }
 }
