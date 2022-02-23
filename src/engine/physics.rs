@@ -45,12 +45,17 @@ impl State{
     }
 }
 /// Main collision logic
-pub fn collision(shape: &mut Shape2D, entities: &[Shape2D]) {
-    if let Shape2D::Triangle(t) = shape{
+pub fn collision(game: &mut Game) {
 
-    }
-    for entity in entities {
-    }
+    let player = &mut game.entities[0];
+
+    if player.y() <= -0.95 {
+        player.set_y(-0.95)
+    } 
+
+    // for entity in &game.entities {
+        
+    // }
 }
 
 /// Main physics loop
@@ -62,5 +67,5 @@ pub fn update(game: &mut Game){
         entity.state().handle(entity, game.dt);
     }
 
-    //collision(game.entities[0], &entities_clone);
+    collision(game);
 }

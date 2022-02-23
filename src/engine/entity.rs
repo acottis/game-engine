@@ -15,6 +15,8 @@ pub enum Shape2D{
 pub trait Transform2D {
     /// Return the x value of the bottom left `C`
     fn x(&self) -> f32;
+    /// Return the y value of the bottom left `C`
+    fn y(&self) -> f32;
     /// Return the x,y of the bottom left `C`
     fn xy(&self) -> Point;
     /// Translate just the x coord
@@ -177,6 +179,13 @@ impl Transform2D for Shape2D {
         match &self {
             Shape2D::Triangle(t) => { t.c.x },
             Shape2D::Rectangle(r) => { r.c.x },
+            Shape2D::Pentagon(_) => { unimplemented!() }
+        }
+    }
+    fn y(&self) -> f32 {
+        match &self {
+            Shape2D::Triangle(t) => { t.c.y },
+            Shape2D::Rectangle(r) => { r.c.y },
             Shape2D::Pentagon(_) => { unimplemented!() }
         }
     }
