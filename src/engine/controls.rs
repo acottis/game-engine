@@ -29,8 +29,8 @@ fn match_key(
             },
             // Jump
             Some(VirtualKeyCode::W) | Some(VirtualKeyCode::Space)  => {
-                if player.state() ==  State::None {
-                        player.set_state(State::Jumping(JUMP_TICKS))
+                if player.state() == State::None {
+                    player.set_state(State::Jumping(JUMP_TICKS))
                 }
             },
             Some(key) => {

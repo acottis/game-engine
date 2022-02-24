@@ -1,18 +1,18 @@
 //! Here be physics
 //! 
 use super::Game;
-use super::entity::{Shape2D, Entity, Transform2D};
-use crate::globals::{JUMP_SPEED, JUMP_TICKS};
+use super::entity::{Entity, Transform2D};
+use crate::globals::JUMP_SPEED;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum State{
     None,
     Jumping(u32), // Jumping with T time
-    Falling(u32),
+    Falling,
     // For terrain that has no phsyics applied
     Static,
 }
-impl State{
+impl State {
     fn handle<T>(&self, shape: &mut T, dt: f32) 
         where T: Transform2D + Entity 
     {
@@ -25,19 +25,15 @@ impl State{
                         shape.set_state(State::Jumping(i-1)); 
                     },
                     0 => { 
-                        shape.set_state(State::Falling(JUMP_TICKS));  
+                        shape.set_state(State::Falling);  
                     },
                 }
             }
-            State::Falling(i) => {
-                match i {
-                    1.. => {  
-                        shape.shift_y(-JUMP_SPEED * dt); 
-                        shape.set_state(State::Falling(i-1)); 
-                    },
-                    0 => { 
-                        shape.set_state(State::None);  
-                    },
+            State::Falling => {
+                if shape.y() > -0.95 {
+                    shape.shift_y(-JUMP_SPEED * dt); 
+                } else {
+                    shape.set_state(State::None);
                 }
             }
             State::Static => {}
@@ -45,23 +41,27 @@ impl State{
     }
 }
 /// Main collision logic
-pub fn collision(game: &mut Game) {
+fn collision(game: &mut Game) {
 
     let player = &mut game.entities[0];
 
-    if player.y() <= -0.95 {
+    if player.y() < -0.95 {
         player.set_y(-0.95)
     } 
-
-    // for entity in &game.entities {
-        
-    // }
 }
+
+// pub fn grounded<T>(shape: &T) -> bool 
+//     where T: Entity + Transform2D 
+// {
+//     if shape.y() <= 0.95 {
+//         true
+//     }else{
+//         false
+//     }
+// }
 
 /// Main physics loop
 pub fn update(game: &mut Game){
-
-    let entities_clone = game.entities.clone();
 
     for entity in &mut game.entities{
         entity.state().handle(entity, game.dt);
