@@ -37,6 +37,10 @@ pub trait Transform2D {
         self.set_x(x);
         self.set_y(y);
     }
+    // Find the y value with the highest value
+    fn max_y(&self) -> f32;    
+    // Find the x value with the highest value
+    fn max_x(&self) -> f32;
 }
 
 /// Here are traits that are applied to entities such as
@@ -46,6 +50,8 @@ pub trait Entity {
     fn state(&self) -> State;
     // Set the state 
     fn set_state(&mut self, state: State);
+    // Get the collision status
+    fn collides(&self) -> bool;
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -56,12 +62,12 @@ pub struct Rectangle{
     pub d: Point,
     pub colour: wgpu::Color,
     state: State,
-    collision: bool,
+    collides: bool,
 }
 
 impl Rectangle{
     pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color) -> Self {
-        Self { a, b, c, d, colour, state: State::None, collision: true }
+        Self { a, b, c, d, colour, state: State::None, collides: true }
     }
 }
 /// C is the bottom Left of the screen
@@ -80,7 +86,7 @@ impl Default for Rectangle{
             d:          Point::new(-0.9, -1.0), // D
             colour:     wgpu::Color::BLACK,
             state:      State::None,
-            collision:  true,
+            collides:  true,
         }
     }
 }
@@ -95,6 +101,7 @@ pub struct Pentagon{
     pub e: Point,
     pub colour: wgpu::Color,
     state: State,
+    collides: bool,
 }
 /// reference: https://mathworld.wolfram.com/RegularPentagon.html
 /// C is the bottom Left of the screen
@@ -123,6 +130,7 @@ impl Default for Pentagon{
             e: Point::new( s2,  -c2), // E
             colour: wgpu::Color::BLACK,
             state: State::None,
+            collides: false,
         }
     }
 }
@@ -134,6 +142,7 @@ pub struct Triangle{
     pub c: Point,
     pub colour: wgpu::Color,
     state: State,
+    collides: bool,
 }
 /// C is the bottom Left of the screen
 /// |
@@ -150,6 +159,7 @@ impl Default for Triangle{
             c: Point::new(-1.0,  -1.0), // C
             colour: wgpu::Color::BLACK,
             state: State::None,
+            collides: false,
         }
     }
 }
@@ -267,6 +277,37 @@ impl Transform2D for Shape2D {
             _ => {}
         }
     }
+    fn max_y(&self) -> f32 {
+        match &self {
+            Shape2D::Triangle(t) => { unimplemented!() },
+            Shape2D::Rectangle(r) => { 
+                let mut max = r.a.y;
+                if r.b.y > max { max = r.b.y }
+                if r.c.y > max { max = r.c.y }
+                if r.d.y > max { max = r.d.y }
+                max
+            },
+            Shape2D::Pentagon(_) => { unimplemented!() }
+        }
+    }
+    fn max_x(&self) -> f32 {
+        match &self {
+            Shape2D::Triangle(t) => { 
+                let mut max = t.a.x;
+                if t.b.x > max { max = t.b.x }
+                if t.c.x > max { max = t.c.x }
+                max
+             },
+            Shape2D::Rectangle(r) => { 
+                let mut max = r.a.x;
+                if r.b.x > max { max = r.b.x }
+                if r.c.x > max { max = r.c.x }
+                if r.d.x > max { max = r.d.x }
+                max
+            },
+            Shape2D::Pentagon(_) => { unimplemented!() }
+        }
+    }
 }
 
 impl Entity for Shape2D {
@@ -295,6 +336,20 @@ impl Entity for Shape2D {
             },
             Shape2D::Pentagon(ref mut p) => {
                 p.state = state
+            },
+        }
+    }
+    // Get if the object collides
+    fn collides(&self) -> bool {
+        match self {
+            Shape2D::Triangle(t) => {
+                t.collides
+            },
+            Shape2D::Rectangle(r) => {
+                r.collides
+            },
+            Shape2D::Pentagon(p) => {
+                p.collides
             },
         }
     }

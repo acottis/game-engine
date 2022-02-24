@@ -41,7 +41,17 @@ impl Game {
             wgpu::Color::GREEN
         ));
 
+        let platform = Shape2D::Rectangle(
+            Rectangle::new(
+            Point::new(-0.7, -0.77),
+            Point::new(-0.5, -0.77),
+            Point::new(-0.7, -0.75),
+            Point::new(-0.5, -0.75),
+            wgpu::Color::GREEN
+        ));
+        
         entities.push(floor);
+        entities.push(platform);
 
         Self {
             entities,
