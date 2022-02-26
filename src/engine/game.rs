@@ -15,7 +15,7 @@ pub struct Game {
     // Last time to calculate the delta
     last_time: std::time::Instant,
     // Delta time to fix physics
-    pub dt: f32, 
+    pub dt: f32,
 }
 
 impl Game {
@@ -28,7 +28,15 @@ impl Game {
         // We push the index of our player into our players vec
         players.push(entities.len());
         // PLAYER
-        entities.push(Shape2D::Triangle(Triangle::default()));
+        let player = Shape2D::Triangle(Triangle::new(
+            Point::new(-0.95, -0.9), // A
+            Point::new(-0.9,  -1.0), // B
+            Point::new(-1.0,  -1.0), // C
+            wgpu::Color::BLACK,
+            super::physics::Physics { state: super::physics::State::None, collides: false }
+        ));
+
+        entities.push(player);
         //entities.push(Shape2D::Rectangle(Rectangle::default()));
         //entities.push(Shape2D::Pentagon(Pentagon::default()));
 
@@ -38,7 +46,8 @@ impl Game {
             Point::new(1.1, -0.95),
             Point::new(-1.1, -1.05),
             Point::new(1.1, -1.05),
-            wgpu::Color::GREEN
+            wgpu::Color::GREEN,
+            super::physics::State::Static,
         ));
 
         let platform = Shape2D::Rectangle(
@@ -47,7 +56,8 @@ impl Game {
             Point::new(-0.5, -0.77),
             Point::new(-0.7, -0.75),
             Point::new(-0.5, -0.75),
-            wgpu::Color::GREEN
+            wgpu::Color::GREEN,
+            super::physics::State::Static,
         ));
         
         entities.push(floor);
@@ -58,7 +68,7 @@ impl Game {
             players,
             keys_down: HashMap::new(),
             last_time: std::time::Instant::now(),
-            dt: 0.0
+            dt: 0.0,
         }
     }
     /// Update the delta to fix the rate at which the game is played
@@ -94,8 +104,10 @@ impl Game {
     /// 
     pub fn update(&mut self){
         // Handle any user inputs
-        super::controls::handle(self);
+        super::controls::update(self);
         // Run the phsyics against our game
         super::physics::update(self);
+        // Run the camera
+        super::camera::update(self);
     }
 }

@@ -1,7 +1,8 @@
 //! Here is our entity system, we describe our "Entities" that are objects
 //! inside our game, we also do the maths on how to move them here. We define
 //! how we want our objects to behave here
-use super::physics::State;
+
+use super::physics::{Physics, State};
 use std::f32::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
@@ -61,13 +62,20 @@ pub struct Rectangle{
     pub c: Point,
     pub d: Point,
     pub colour: wgpu::Color,
-    state: State,
-    collides: bool,
+    physics: Physics,
 }
 
 impl Rectangle{
-    pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color) -> Self {
-        Self { a, b, c, d, colour, state: State::None, collides: true }
+    pub fn new(
+        a: Point, b: Point, c: Point, d: Point, 
+        colour: wgpu::Color, 
+        state: State
+    ) -> Self {
+        Self { 
+            a, b, c, d, 
+            colour, 
+            physics: Physics::new(state, true) 
+        }
     }
 }
 /// C is the bottom Left of the screen
@@ -85,8 +93,7 @@ impl Default for Rectangle{
             c:          Point::new(-1.0, -1.0), // C
             d:          Point::new(-0.9, -1.0), // D
             colour:     wgpu::Color::BLACK,
-            state:      State::None,
-            collides:  true,
+            physics:    Physics::default(),
         }
     }
 }
@@ -100,8 +107,7 @@ pub struct Pentagon{
     pub d: Point,
     pub e: Point,
     pub colour: wgpu::Color,
-    state: State,
-    collides: bool,
+    physics: Physics,
 }
 /// reference: https://mathworld.wolfram.com/RegularPentagon.html
 /// C is the bottom Left of the screen
@@ -129,8 +135,7 @@ impl Default for Pentagon{
             d: Point::new( s1,  c1), // D
             e: Point::new( s2,  -c2), // E
             colour: wgpu::Color::BLACK,
-            state: State::None,
-            collides: false,
+            physics: Physics::default(),
         }
     }
 }
@@ -141,8 +146,7 @@ pub struct Triangle{
     pub b: Point,
     pub c: Point,
     pub colour: wgpu::Color,
-    state: State,
-    collides: bool,
+    physics: Physics,
 }
 /// C is the bottom Left of the screen
 /// |
@@ -158,18 +162,17 @@ impl Default for Triangle{
             b: Point::new(-0.9,  -1.0), // B
             c: Point::new(-1.0,  -1.0), // C
             colour: wgpu::Color::BLACK,
-            state: State::None,
-            collides: false,
+            physics: Physics::default(),
         }
     }
 }
 
-
-// impl Triangle{
-//     pub fn new(a: Point, b: Point, c: Point, colour: wgpu::Color) -> Self {
-//         Self { a, b, c, colour, state: State::None }
-//     }
-// }
+impl Triangle{
+    pub fn new(a: Point, b: Point, c: Point, 
+        colour: wgpu::Color, physics: Physics) -> Self {
+        Self { a, b, c, colour, physics }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Point {
@@ -274,12 +277,11 @@ impl Transform2D for Shape2D {
                 r.d.y += y;
             },
             Shape2D::Pentagon(_) => { unimplemented!() }
-            _ => {}
         }
     }
     fn max_y(&self) -> f32 {
         match &self {
-            Shape2D::Triangle(t) => { unimplemented!() },
+            Shape2D::Triangle(_) => { unimplemented!() },
             Shape2D::Rectangle(r) => { 
                 let mut max = r.a.y;
                 if r.b.y > max { max = r.b.y }
@@ -315,13 +317,13 @@ impl Entity for Shape2D {
     fn state(&self) -> State {
         match self {
             Shape2D::Triangle(t) => {
-                t.state
+                t.physics.state
             },
             Shape2D::Rectangle(r) => {
-                r.state
+                r.physics.state
             },
             Shape2D::Pentagon(p) => {
-                p.state
+                p.physics.state
             },
         }
     }
@@ -329,13 +331,13 @@ impl Entity for Shape2D {
     fn set_state(&mut self, state: State){
         match self {
             Shape2D::Triangle(ref mut t) => {
-                t.state = state
+                t.physics.state = state
             },
             Shape2D::Rectangle(ref mut r) => {
-                r.state = state
+                r.physics.state = state
             },
             Shape2D::Pentagon(ref mut p) => {
-                p.state = state
+                p.physics.state = state
             },
         }
     }
@@ -343,13 +345,13 @@ impl Entity for Shape2D {
     fn collides(&self) -> bool {
         match self {
             Shape2D::Triangle(t) => {
-                t.collides
+                t.physics.collides
             },
             Shape2D::Rectangle(r) => {
-                r.collides
+                r.physics.collides
             },
             Shape2D::Pentagon(p) => {
-                p.collides
+                p.physics.collides
             },
         }
     }

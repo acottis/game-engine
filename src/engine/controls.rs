@@ -42,7 +42,7 @@ fn match_key(
 }
 /// Run logic on the inputs in [keys_down] HasMap
 /// 
-pub fn handle(game: &mut Game){
+pub fn update(game: &mut Game){
     // We handle our player no matter what shape
 
     // If we have no players, dont do any input handling
