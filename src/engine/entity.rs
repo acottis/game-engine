@@ -66,8 +66,8 @@ pub struct Rectangle{
 }
 
 impl Rectangle{
-    pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color) -> Self {
-        Self { a, b, c, d, colour, state: State::None, collides: true }
+    pub fn new(a: Point, b: Point, c: Point, d: Point, colour: wgpu::Color, state: State) -> Self {
+        Self { a, b, c, d, colour, state, collides: true }
     }
 }
 /// C is the bottom Left of the screen
@@ -274,7 +274,6 @@ impl Transform2D for Shape2D {
                 r.d.y += y;
             },
             Shape2D::Pentagon(_) => { unimplemented!() }
-            _ => {}
         }
     }
     fn max_y(&self) -> f32 {
